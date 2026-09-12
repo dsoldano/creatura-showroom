@@ -50,14 +50,14 @@ const facts = { low: state ? await p.evaluate(tierFacts) : null };
 for (const tier of ['mid', 'high']) {
   const pg = await ctx.newPage(); wire(pg);
   const tu = new URL(url); tu.searchParams.set('autostart', '800'); tu.searchParams.set('q', tier);
-  const r = await pg.goto(tu.toString(), { waitUntil: 'networkidle', timeout: 90000 });
-  const booted = await pg.waitForFunction(() => !!window.__walk, null, { timeout: 90000 }).then(() => true).catch(() => false); await pg.waitForTimeout(3000);   // boot = top-level awaits + tree planting; slow under software GL
-  facts[tier] = r && r.status() === 200 && booted ? await pg.evaluate(tierFacts) : null; await pg.close();
+  const t0 = Date.now(); const r = await pg.goto(tu.toString(), { waitUntil: 'networkidle', timeout: 120000 });
+  const booted = await pg.waitForFunction(() => !!window.__walk, null, { timeout: 180000 }).then(() => true).catch(() => false); await pg.waitForTimeout(3000);   // boot = top-level awaits + tree planting + (mid) two environment bakes; slow under software GL
+  facts[tier] = r && r.status() === 200 && booted ? { ...(await pg.evaluate(tierFacts)), bootMs: Date.now() - t0 } : { failed: { status: r && r.status(), booted, ms: Date.now() - t0 } }; await pg.close();
 }
 for (const tier of ['low', 'mid', 'high']) {
-  const f = facts[tier];
+  const f = facts[tier] && !facts[tier].failed ? facts[tier] : null; const why = facts[tier] && facts[tier].failed ? JSON.stringify(facts[tier]) : '';
   ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth on, opaque canvas, plinth cap -0.3)`,
-    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3, JSON.stringify(f));
+    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3, f ? JSON.stringify(f) : why);
   ok(`tier ${tier} draw budget (≤${CEIL[tier][0]} calls, ≤${CEIL[tier][1]} tris)`, !!f && f.stats.calls > 0 && f.stats.calls <= CEIL[tier][0] && f.stats.triangles <= CEIL[tier][1], f ? JSON.stringify(f.stats) : 'no facts');
 }
 ok('no shader compile errors on any tier', !errs.some(e => /Shader Error|WebGLProgram|WebGLShader|GLSL/i.test(e)), errs.filter(e => /Shader|GLSL/i.test(e)).slice(0, 3).join(' | '));
