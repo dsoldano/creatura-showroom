@@ -31,6 +31,7 @@
   <aside id="panel" class="collapsed" aria-label="Places on the site">
     <button class="handle" id="sheetHandle" aria-label="Expand or collapse the list"><span></span></button>
     <div id="panelHome">
+      <div class="tours" id="tours" role="group" aria-label="Guided tours"></div>
       <div class="facts" id="facts"></div>
       <div class="themes" id="themes" role="group" aria-label="Filter by theme"></div>
       <ol class="hotlist" id="hotlist"></ol>
@@ -44,6 +45,12 @@
     </div>
   </aside>
 
+  <div id="tourbar" hidden>
+    <div class="tb-text"><b id="tbName"></b><span id="tbPlace"></span></div>
+    <div class="tb-bar"><i id="tbFill"></i></div>
+    <button class="tb-btn" id="tbPause" aria-label="Pause">❚❚</button>
+    <button class="tb-btn" id="tbExit" aria-label="Exit tour">✕</button>
+  </div>
   <div id="compass" title="North"><div class="needle"><span>N</span></div></div>
   <footer id="credit">Built by <a href="https://cs.csoul.cloud" target="_blank" rel="noopener">CreatiSoul</a> · demonstration from public data</footer>
 

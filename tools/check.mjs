@@ -5,7 +5,7 @@ const results = []; const ok = (name, pass, info = '') => { results.push({ name,
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const p = await ctx.newPage();
 const errs = []; p.on('pageerror', e => errs.push('pageerror: ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); }); p.on('requestfailed', r => errs.push('requestfailed: ' + r.url()));
-const u = new URL(url); u.searchParams.set('autostart', '800'); u.searchParams.set('q', 'low');
+const u = new URL(url); u.searchParams.set('autostart', '800'); u.searchParams.set('q', 'low'); u.searchParams.set('tourSpeed', '60');
 const resp = await p.goto(u.toString(), { waitUntil: 'networkidle', timeout: 90000 }); ok('page loads', !!resp && resp.status() === 200, 'status ' + (resp && resp.status()));
 await p.waitForTimeout(4000);
 const state = await p.evaluate(() => { const w = window.__walk; if (!w) return null;
@@ -35,7 +35,11 @@ if (state) {
   await p.click('#btnBack'); await p.click('#themes button[data-theme="sports"]'); await p.waitForTimeout(300);
   const th = await p.evaluate(() => ({ dim: document.querySelectorAll('#labels .pin.dim').length, shown: document.querySelectorAll('#hotlist li.item:not(.filtered)').length }));
   ok('theme filter dims other pins and filters the list', th.dim > 30 && th.shown === 6, JSON.stringify(th));
-  const tours = state.tours; // placeholder until day 6
+  // tours: play each at 25x and confirm it ends, selects hotspots on the way, and leaves no errors
+  await p.click('#btnBack').catch(() => {}); await p.click('#themes button[data-theme=""]');
+  const tourRes = await p.evaluate(async () => { const w = window.__walk; const out = []; for (const t of w.site.tours) { const seen = new Set(); w.startTour(t.id); const t0 = Date.now();
+      while (w.tour && Date.now() - t0 < 90000) { if (w.selected) seen.add(w.selected); await new Promise(r => setTimeout(r, 120)); } out.push({ id: t.id, ended: w.tourState.ended.includes(t.id), seen: seen.size }); } return out; });
+  ok('three tours run to completion (60x on this software renderer), each passing ≥3 hotspots', tourRes.length === 3 && tourRes.every(t => t.ended && t.seen >= 3), JSON.stringify(tourRes));
 }
 ok('zero console errors / failed requests', errs.length === 0, errs.slice(0, 5).join(' | '));
 await b.close();

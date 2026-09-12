@@ -1,6 +1,6 @@
 :root {
   --ink: #1d1a16; --muted: #6b655c; --paper: #f7f3ec; --paper-2: #efe9df; --line: rgba(29,26,22,.12);
-  --accent: #c8772a; --accent-ink: #fff; --panel-w: 360px; --sheet-h: 156px;
+  --accent: #c8772a; --accent-ink: #fff; --panel-w: 360px; --sheet-h: 204px;
   --sky-top: #cfe0f2; --sky-bottom: #f1ede4;
 }
 * { box-sizing: border-box; }
@@ -60,6 +60,24 @@ body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif
   background: rgba(247,243,236,.92); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 #panel .handle { display: none; }
 #panelHome, #panelDetail { flex: 1; overflow: auto; padding: 14px 14px 18px; overscroll-behavior: contain; }
+.tours { display: flex; gap: 6px; margin-bottom: 12px; }
+.tours button { flex: 1; font: 600 12px/1.2 system-ui, sans-serif; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 9px 8px; cursor: pointer; text-align: left; }
+.tours button b { display: block; font-size: 13px; }
+.tours button small { display: block; color: var(--muted); font-weight: 500; margin-top: 2px; }
+.tours button:hover { border-color: var(--accent); }
+.tours button.playing { background: var(--accent); color: #fff; border-color: transparent; }
+.tours button.playing small { color: rgba(255,255,255,.8); }
+#tourbar { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); width: min(560px, calc(100% - 28px)); z-index: 7;
+  display: grid; grid-template-columns: 1fr auto auto; grid-template-rows: auto auto; gap: 6px 10px; align-items: center;
+  background: rgba(29,26,22,.82); color: #fff; backdrop-filter: blur(10px); border-radius: 14px; padding: 10px 12px 10px 14px; }
+#tourbar[hidden] { display: none; }
+.tb-text { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.tb-text b { font-size: 13px; white-space: nowrap; }
+.tb-text span { font-size: 12px; color: rgba(255,255,255,.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tb-bar { grid-column: 1 / -1; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; }
+.tb-bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.tb-btn { font: 700 12px/1 system-ui; color: #fff; background: rgba(255,255,255,.14); border: 0; border-radius: 999px; width: 34px; height: 34px; cursor: pointer; }
+.tb-btn:hover { background: rgba(255,255,255,.26); }
 .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
 .facts div { font-size: 12px; color: var(--muted); }
 .facts b { display: block; color: var(--ink); font-size: 13px; }
@@ -119,6 +137,13 @@ body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif
   #panel .handle span { display: block; width: 44px; height: 5px; border-radius: 3px; background: rgba(29,26,22,.25); margin: 8px auto 0; }
   #panelHome, #panelDetail { padding: 6px 14px 20px; }
   .facts { grid-template-columns: 1fr 1fr 1fr; padding-bottom: 8px; margin-bottom: 8px; }
+  .tours { margin-bottom: 8px; }
+  #panel.collapsed .facts .wide { display: none; }   /* RERA line only when expanded */
+  .tours button { padding: 7px 8px; border-radius: 10px; }
+  .tours button small { display: none; }
+  .pin { --min: .85; }
+  #tourbar { bottom: calc(var(--sheet-h) + 10px); width: calc(100% - 20px); padding: 8px 10px 8px 12px; }
+  #panel:not(.collapsed) ~ #tourbar { display: none; }
   .facts .wide { grid-column: 1 / -1; font-size: 11px; }
   .facts .wide b { font-size: 11px; }
   .detail-head h2 { font-size: 18px; }

@@ -932,7 +932,229 @@
       }
     }
   ],
-  "tours": [],
+  "tours": [
+    {
+      "id": "arrival",
+      "name": "Arrival",
+      "blurb": "Through the gate, up the boulevard, to the drop-offs.",
+      "duration": 36,
+      "keyframes": [
+        {
+          "t": 0,
+          "pos": [313,800],
+          "radius": 150,
+          "phiDeg": 74,
+          "thetaDeg": 0,
+          "hotspot": "entrance-portal"
+        },
+        {
+          "t": 0.18,
+          "pos": [313,720],
+          "radius": 110,
+          "phiDeg": 66,
+          "thetaDeg": 4
+        },
+        {
+          "t": 0.34,
+          "pos": [310,678],
+          "radius": 100,
+          "phiDeg": 58,
+          "thetaDeg": 12,
+          "hotspot": "arrival-plaza"
+        },
+        {
+          "t": 0.52,
+          "pos": [298,564],
+          "radius": 120,
+          "phiDeg": 54,
+          "thetaDeg": 6,
+          "hotspot": "arrival-boulevard"
+        },
+        {
+          "t": 0.68,
+          "pos": [394,641],
+          "radius": 105,
+          "phiDeg": 56,
+          "thetaDeg": 40,
+          "hotspot": "clubhouse-drop-off"
+        },
+        {
+          "t": 0.86,
+          "pos": [132,168],
+          "radius": 130,
+          "phiDeg": 58,
+          "thetaDeg": -110,
+          "hotspot": "tower-drop-off"
+        },
+        {
+          "t": 1,
+          "pos": [313,440],
+          "radius": 480,
+          "phiDeg": 52,
+          "thetaDeg": 28,
+          "targetY": 22,
+          "overview": true
+        }
+      ]
+    },
+    {
+      "id": "amenities",
+      "name": "Amenities loop",
+      "blurb": "Along the jogging loop past every court, garden and plaza.",
+      "duration": 50,
+      "keyframes": [
+        {
+          "t": 0,
+          "pos": [231,407],
+          "radius": 105,
+          "phiDeg": 55,
+          "thetaDeg": 30,
+          "hotspot": "stepped-well-plaza"
+        },
+        {
+          "t": 0.11,
+          "pos": [237,464],
+          "radius": 100,
+          "phiDeg": 54,
+          "thetaDeg": 15,
+          "hotspot": "tennis-court"
+        },
+        {
+          "t": 0.22,
+          "pos": [206,349],
+          "radius": 95,
+          "phiDeg": 54,
+          "thetaDeg": -55,
+          "hotspot": "skating-rink"
+        },
+        {
+          "t": 0.32,
+          "pos": [169,302],
+          "radius": 95,
+          "phiDeg": 54,
+          "thetaDeg": -85,
+          "hotspot": "pickleball-court"
+        },
+        {
+          "t": 0.44,
+          "pos": [320,141],
+          "radius": 110,
+          "phiDeg": 54,
+          "thetaDeg": -25,
+          "hotspot": "kids-play-epdm"
+        },
+        {
+          "t": 0.56,
+          "pos": [419,311],
+          "radius": 105,
+          "phiDeg": 54,
+          "thetaDeg": 40,
+          "hotspot": "multipurpose-court"
+        },
+        {
+          "t": 0.68,
+          "pos": [515,425],
+          "radius": 110,
+          "phiDeg": 54,
+          "thetaDeg": 100,
+          "hotspot": "stepped-arena"
+        },
+        {
+          "t": 0.78,
+          "pos": [513,517],
+          "radius": 100,
+          "phiDeg": 54,
+          "thetaDeg": 90,
+          "hotspot": "pet-park"
+        },
+        {
+          "t": 0.9,
+          "pos": [322,450],
+          "radius": 100,
+          "phiDeg": 54,
+          "thetaDeg": 30,
+          "hotspot": "event-plaza"
+        },
+        {
+          "t": 1,
+          "pos": [313,440],
+          "radius": 480,
+          "phiDeg": 52,
+          "thetaDeg": 28,
+          "targetY": 22,
+          "overview": true
+        }
+      ]
+    },
+    {
+      "id": "towers",
+      "name": "Towers",
+      "blurb": "Up the facade of Tower A, across to Tower B and the clubhouse.",
+      "duration": 40,
+      "keyframes": [
+        {
+          "t": 0,
+          "pos": [188,166],
+          "radius": 170,
+          "phiDeg": 76,
+          "thetaDeg": -135,
+          "targetY": 12,
+          "hotspot": "tower-a-info"
+        },
+        {
+          "t": 0.22,
+          "pos": [188,166],
+          "radius": 230,
+          "phiDeg": 62,
+          "thetaDeg": -100,
+          "targetY": 80
+        },
+        {
+          "t": 0.4,
+          "pos": [188,166],
+          "radius": 260,
+          "phiDeg": 46,
+          "thetaDeg": -60,
+          "targetY": 140
+        },
+        {
+          "t": 0.55,
+          "pos": [313,440],
+          "radius": 420,
+          "phiDeg": 50,
+          "thetaDeg": -30,
+          "targetY": 30
+        },
+        {
+          "t": 0.72,
+          "pos": [452,180],
+          "radius": 300,
+          "phiDeg": 60,
+          "thetaDeg": 135,
+          "targetY": 70,
+          "hotspot": "tower-b-info"
+        },
+        {
+          "t": 0.88,
+          "pos": [452,650],
+          "radius": 130,
+          "phiDeg": 55,
+          "thetaDeg": 60,
+          "targetY": 4,
+          "hotspot": "clubhouse-info"
+        },
+        {
+          "t": 1,
+          "pos": [313,440],
+          "radius": 480,
+          "phiDeg": 52,
+          "thetaDeg": 28,
+          "targetY": 22,
+          "overview": true
+        }
+      ]
+    }
+  ],
   "developerRenders": [
     {
       "file": "source/render-exterior-aerial.webp",

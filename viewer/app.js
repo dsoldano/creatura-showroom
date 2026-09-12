@@ -22,8 +22,9 @@ const features = site.features || [];
 // ============ renderer / scene / camera ============
 const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+const COARSE = matchMedia('(pointer: coarse)').matches;
 const LOWQ = q.get('q') === 'low';
-renderer.setPixelRatio(LOWQ ? 1 : Math.min(devicePixelRatio || 1, 1.5));
+renderer.setPixelRatio(LOWQ ? 1 : Math.min(devicePixelRatio || 1, COARSE ? 1.35 : 1.5));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
@@ -48,7 +49,7 @@ controls.enabled = false;
 
 const DEFAULT_VIEW = { radius: 0, phi: THREE.MathUtils.degToRad(52), theta: THREE.MathUtils.degToRad(28), target: new THREE.Vector3(0, 22, -siteD * 0.04) };
 const isPhone = () => matchMedia('(max-width: 760px)').matches;
-const PANEL_W = 374, SHEET_H = 156;
+const PANEL_W = 374, SHEET_H = 204;
 function visibleAspect() { const w = canvas.clientWidth, h = canvas.clientHeight; return isPhone() ? w / Math.max(1, h - SHEET_H) : (w - PANEL_W) / Math.max(1, h); }
 function fitRadius() { const a = visibleAspect(); return Math.max(siteW, siteD) * 1.75 * Math.max(1, 0.7 / a); }
 function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
@@ -57,7 +58,7 @@ function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
 // ============ lighting (day / dusk) ============
 const hemi = new THREE.HemisphereLight(0xdfe9ff, 0xc2b49a, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1dc, 2.0);
-sun.castShadow = true; sun.shadow.mapSize.set(LOWQ ? 1024 : 2048, LOWQ ? 1024 : 2048);
+sun.castShadow = true; sun.shadow.mapSize.set(LOWQ || COARSE ? 1024 : 2048, LOWQ || COARSE ? 1024 : 2048);
 { const sc = sun.shadow.camera, R = Math.max(siteW, siteD) * 0.9; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 50; sc.far = 1400; }
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun); scene.add(sun.target);
@@ -295,7 +296,7 @@ $('#introDisc').textContent = site.disclaimer || '';
 const northRad = THREE.MathUtils.degToRad(site.plan.northDeg ?? 0), northVec = new THREE.Vector3(Math.sin(northRad), 0, -Math.cos(northRad)), needle = $('#compass .needle');
 function updateCompass() { const a = Math.atan2(northVec.x, -northVec.z) + controls.getAzimuthalAngle(); needle.style.transform = `rotate(${THREE.MathUtils.radToDeg(a).toFixed(1)}deg)`; }
 $('#btnReset').addEventListener('click', () => flyTo(fitView(), 1400));
-window.addEventListener('keydown', e => { if (e.key === 'Escape') { deselect(); flyTo(fitView(), 1400); } });
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { if (tour) endTour(true); else { deselect(); flyTo(fitView(), 1400); } } });
 const btnLight = $('#btnLight');
 function setLight(mode) { lightTarget = mode === 'dusk' ? 1 : 0; btnLight.textContent = lightTarget ? 'Day' : 'Dusk'; btnLight.setAttribute('aria-pressed', String(!!lightTarget)); }
 btnLight.addEventListener('click', () => setLight(lightTarget ? 'day' : 'dusk'));
@@ -304,7 +305,7 @@ setLight(lightK ? 'dusk' : 'day'); applyLighting(lightK);
 resize(); DEFAULT_VIEW.radius = fitRadius();
 applyView({ radius: 1500, phi: THREE.MathUtils.degToRad(8), theta: DEFAULT_VIEW.theta - 0.35, target: DEFAULT_VIEW.target });
 const explore = $('#btnExplore'); explore.disabled = false; explore.textContent = 'Explore the site';
-const afterReveal = () => { if (hashId) select(decodeURIComponent(hashId), true); };
+const afterReveal = () => { if (hashTour) startTour(decodeURIComponent(hashTour)); else if (hashId) select(decodeURIComponent(hashId), true); };
 explore.addEventListener('click', () => { $('#intro').classList.add('hide'); flyTo(fitView(), 5000, afterReveal); });
 if (q.get('autostart')) { $('#intro').classList.add('hide'); flyTo(fitView(), +q.get('autostart') || 5000, afterReveal); }
 
@@ -338,7 +339,7 @@ function updatePins(now) {
   const doRay = now - pinTick > 140; if (doRay) pinTick = now;
   for (const h of hotspots) {
     const el = pinEls.get(h.id), d = camPos.distanceTo(h.world);
-    el.style.setProperty('--s', THREE.MathUtils.clamp(1.3 - d / 900, 0.6, 1.15).toFixed(3));
+    el.style.setProperty('--s', THREE.MathUtils.clamp(1.3 - d / 900, COARSE ? 0.85 : 0.6, 1.15).toFixed(3));
     el.classList.toggle('hidden', d > 1000);
     if (doRay) { ray.set(camPos, tmpV.copy(h.world).sub(camPos).normalize()); const hit = ray.intersectObjects(occluders, false)[0]; el.classList.toggle('occluded', !!hit && hit.distance < d - 3 && selected !== h.id); }
   }
@@ -360,7 +361,7 @@ function setTheme(t) {
 const panel = $('#panel');
 $('#sheetHandle').addEventListener('click', () => panel.classList.toggle('collapsed'));
 function showHome() { $('#panelDetail').hidden = true; $('#panelHome').hidden = false; }
-function select(id, fly) {
+function select(id, fly, quiet) {
   const h = hotspots.find(x => x.id === id); if (!h) return;
   selected = id;
   for (const x of hotspots) pinEls.get(x.id).classList.toggle('active', x.id === id);
@@ -370,7 +371,7 @@ function select(id, fly) {
   $('#dNum').textContent = h.n; $('#dName').textContent = h.name; $('#dCaption').textContent = h.caption || '';
   const im = $('#dImg'); if (img) { im.src = BASE + 'postcards/' + img.file; im.alt = h.name + ' — ' + KIND_LABEL[img.kind]; im.hidden = false; } else { im.removeAttribute('src'); im.hidden = true; }
   $('#dBadge').textContent = img ? KIND_LABEL[img.kind] : ''; $('#dBadge').className = 'badge ' + (img ? img.kind : ''); $('#dCredit').textContent = img ? (img.credit || '') : '';
-  $('#panelHome').hidden = true; $('#panelDetail').hidden = false; $('#panelDetail').scrollTop = 0; panel.classList.remove('collapsed');
+  $('#panelHome').hidden = true; $('#panelDetail').hidden = false; $('#panelDetail').scrollTop = 0; if (!quiet) panel.classList.remove('collapsed');
   history.replaceState(null, '', '#h=' + encodeURIComponent(id));
   if (fly) flyToHotspot(h);
 }
@@ -389,6 +390,61 @@ $('#btnNext').addEventListener('click', () => step(1)); $('#btnPrev').addEventLi
 canvas.addEventListener('pointerdown', () => { if (isPhone()) panel.classList.add('collapsed'); });
 const hashId = (location.hash.match(/h=([^&]+)/) || [])[1];
 
+// ============ guided tours ============
+const tours = site.tours || [];
+let tour = null; // { def, t0, elapsed, paused, blendFrom, blendT, lastKf }
+const tb = { bar: $('#tourbar'), name: $('#tbName'), place: $('#tbPlace'), fill: $('#tbFill'), pause: $('#tbPause'), exit: $('#tbExit') };
+const TOUR_SPEED = +(q.get('tourSpeed') || 1);
+$('#tours').innerHTML = tours.map(t => `<button data-tour="${t.id}"><b>${t.name}</b><small>${t.blurb || ''} · ${t.duration}s</small></button>`).join('');
+$('#tours').addEventListener('click', e => { const b = e.target.closest('button'); if (b) startTour(b.dataset.tour); });
+function kfView(k) { return { radius: k.radius, phi: THREE.MathUtils.degToRad(k.phiDeg), theta: THREE.MathUtils.degToRad(k.thetaDeg), target: new THREE.Vector3(toX(k.pos[0]), k.targetY ?? 0, toZ(k.pos[1])) }; }
+function catmull(p0, p1, p2, p3, u) { const u2 = u * u, u3 = u2 * u; return 0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u2 + (-p0 + 3 * p1 - 3 * p2 + p3) * u3); }
+function tourView(def, f) {
+  const kfs = def._views; const n = kfs.length; if (f <= 0) return kfs[0]; if (f >= 1) return kfs[n - 1];
+  let i = 0; while (i < n - 2 && def.keyframes[i + 1].t <= f) i++;
+  const ta = def.keyframes[i].t, tb2 = def.keyframes[i + 1].t, u = (f - ta) / Math.max(1e-6, tb2 - ta);
+  const P = j => kfs[THREE.MathUtils.clamp(j, 0, n - 1)];
+  const a = P(i - 1), b = P(i), c = P(i + 1), d = P(i + 2);
+  return { radius: catmull(a.radius, b.radius, c.radius, d.radius, u), phi: catmull(a.phi, b.phi, c.phi, d.phi, u), theta: catmull(a.theta, b.theta, c.theta, d.theta, u),
+    target: new THREE.Vector3(catmull(a.target.x, b.target.x, c.target.x, d.target.x, u), catmull(a.target.y, b.target.y, c.target.y, d.target.y, u), catmull(a.target.z, b.target.z, c.target.z, d.target.z, u)) };
+}
+function startTour(id) {
+  const def = tours.find(t => t.id === id); if (!def) return;
+  if (!def._views) { def._views = def.keyframes.map(kfView); for (let i = 1; i < def._views.length; i++) { let d = def._views[i].theta - def._views[i - 1].theta; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; def._views[i].theta = def._views[i - 1].theta + d; }
+    const last = def.keyframes[def.keyframes.length - 1]; if (last.overview) def._views[def._views.length - 1] = { ...fitView(), target: fitView().target.clone() }; }
+  tween = null; tour = { def, elapsed: 0, paused: false, blendFrom: currentView(), blendT: 0, lastKf: -1 };
+  controls.enabled = false; deselect(); panel.classList.add('collapsed');
+  document.querySelectorAll('#tours button').forEach(b => b.classList.toggle('playing', b.dataset.tour === id));
+  tb.name.textContent = def.name; tb.place.textContent = ''; tb.fill.style.width = '0%'; tb.pause.textContent = '❚❚'; tb.bar.hidden = false;
+  history.replaceState(null, '', '#tour=' + id);
+}
+function endTour(flyHome = true) {
+  if (!tour) return; const wasPlaying = !tour.paused; tour = null; tb.bar.hidden = true;
+  document.querySelectorAll('#tours button').forEach(b => b.classList.remove('playing'));
+  controls.enabled = true; history.replaceState(null, '', location.pathname + location.search);
+  if (flyHome && wasPlaying) flyTo(fitView(), 1400);
+}
+function stepTour(dt) {
+  if (!tour) return; const def = tour.def;
+  if (tour.paused) return;
+  tour.elapsed += dt * TOUR_SPEED; tour.blendT = Math.min(1, tour.blendT + dt / 1.2);
+  const f = Math.min(1, tour.elapsed / def.duration);
+  const v = tourView(def, f);
+  if (tour.blendT < 1) { const e = 1 - Math.pow(1 - tour.blendT, 3), b = tour.blendFrom; let dth = v.theta - b.theta; while (dth > Math.PI) dth -= 2 * Math.PI; while (dth < -Math.PI) dth += 2 * Math.PI;
+    applyView({ radius: THREE.MathUtils.lerp(b.radius, v.radius, e), phi: THREE.MathUtils.lerp(b.phi, v.phi, e), theta: b.theta + dth * e, target: b.target.clone().lerp(v.target, e) }); }
+  else applyView(v);
+  // highlight the hotspot being passed
+  let kf = -1; for (let i = 0; i < def.keyframes.length; i++) if (def.keyframes[i].t <= f + 0.02) kf = i;
+  if (kf !== tour.lastKf) { tour.lastKf = kf; const h = def.keyframes[kf] && def.keyframes[kf].hotspot; if (h) { select(h, false, true); tb.place.textContent = hotspots.find(x => x.id === h)?.name || ''; } }
+  tb.fill.style.width = (f * 100).toFixed(1) + '%';
+  if (f >= 1) { const t = tour; tour = null; tb.bar.hidden = true; document.querySelectorAll('#tours button').forEach(b => b.classList.remove('playing')); controls.enabled = true; history.replaceState(null, '', location.pathname + location.search); tourState.ended.push(t.def.id); }
+}
+const tourState = { ended: [] };
+tb.pause.addEventListener('click', () => { if (!tour) return; tour.paused = !tour.paused; tb.pause.textContent = tour.paused ? '▶' : '❚❚'; controls.enabled = tour.paused; if (!tour.paused) { tour.blendFrom = currentView(); tour.blendT = 0; } });
+tb.exit.addEventListener('click', () => endTour(true));
+canvas.addEventListener('pointerdown', () => { if (tour && !tour.paused) { tour.paused = true; tb.pause.textContent = '▶'; controls.enabled = true; } });
+const hashTour = (location.hash.match(/tour=([^&]+)/) || [])[1];
+
 // ============ loop ============
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio(), phone = isPhone(), key = w + 'x' + h + (phone ? 'p' : 'd');
@@ -399,13 +455,18 @@ function resize() {
   else { camera.aspect = (w + PANEL_W) / h; camera.setViewOffset(w + PANEL_W, h, PANEL_W, 0, w, h); }
   camera.updateProjectionMatrix();
 }
-let lastT = performance.now();
+let lastT = performance.now(), dirty = true, dirtyUntil = performance.now() + 3000;
+controls.addEventListener('change', () => { dirty = true; });
+window.addEventListener('resize', () => { lastSize = ''; dirty = true; });
 renderer.setAnimationLoop(now => {
   const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
-  resize(); stepTween(now);
-  if (Math.abs(lightTarget - lightK) > 0.001) { lightK += Math.sign(lightTarget - lightK) * Math.min(Math.abs(lightTarget - lightK), dt / 1.2); applyLighting(lightK); }
-  if (controls.enabled) controls.update();
+  resize(); stepTween(now); stepTour(dt);
+  if (Math.abs(lightTarget - lightK) > 0.001) { lightK += Math.sign(lightTarget - lightK) * Math.min(Math.abs(lightTarget - lightK), dt / 1.2); applyLighting(lightK); dirty = true; }
+  if (controls.enabled && controls.update()) dirty = true;
+  const animating = !!tween || (tour && !tour.paused) || ring.visible || now < dirtyUntil;
+  if (!dirty && !animating) return;            // idle: skip the frame (battery)
+  dirty = false;
   updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
 });
 
-window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, get selected() { return selected; } };
+window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; } };
