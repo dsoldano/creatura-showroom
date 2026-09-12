@@ -39,7 +39,9 @@ node tools/check.mjs https://walk.csoul.cloud/belvedere/   # 12 live checks (boo
 node tools/shoot.mjs <url> <outPrefix>                     # desktop + phone screenshots with console-error capture
 ```
 
-Viewer URL parameters: `?project=<base>` (dev only), `autostart=<ms>` (skip the intro, reveal in ms), `light=dusk`, `q=low`, `tourSpeed=<n>` (tests), and hashes `#h=<hotspotId>`, `#tour=<tourId>`.
+Viewer URL parameters: `?project=<base>` (dev only), `autostart=<ms>` (skip the intro, reveal in ms), `light=dusk`, `q=low`, `tourSpeed=<n>` (tests), `fx=alpha|nolog|stop|blur` (restore one pre-fix behaviour each, for bisecting flicker on a real phone), and hashes `#h=<hotspotId>`, `#tour=<tourId>`.
+
+Mobile flicker (2026-09-12): fixed by an opaque canvas + sky dome, logarithmic depth with no coplanar surfaces, no backdrop-filter on phones, and an idle loop that keeps rendering at ~11 fps. Owner-verified on a real phone.
 
 ## Hosting
 
