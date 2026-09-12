@@ -63,3 +63,4 @@ Then open it on a phone: drag, pinch, play a tour. That is the performance gate;
 - ESM tools do not honour `NODE_PATH`; Playwright is symlinked into `tools/node_modules` (see README).
 - Headless screenshots on this server take 25–55 s each; pass `timeout: 150000` to `page.screenshot`.
 - `check.mjs` plays tours at 60× because the software renderer runs about one frame per second.
+- Run `check.mjs` on its own: with screenshot runs competing for the software renderer, a 60× tour can skip a keyframe between two one-second frames and the tours check reports fewer hotspots seen. It is a timing artefact of this host, not the viewer.
