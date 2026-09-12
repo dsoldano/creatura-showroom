@@ -84,8 +84,8 @@ body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif
 .detail-head h2 { font-size: 20px; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
 .postcard { margin: 0 0 10px; }
 .postcard img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 12px; display: block; background: var(--paper-2); }
-.postcard figcaption { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; gap: 8px; align-items: center; }
-.badge { display: inline-block; font: 700 10px/1 system-ui; letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: var(--paper-2); color: var(--ink); border: 1px solid var(--line); }
+.postcard figcaption { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.badge { display: inline-block; white-space: nowrap; font: 700 10px/1 system-ui; letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: var(--paper-2); color: var(--ink); border: 1px solid var(--line); }
 .badge.ai { background: #fff2e4; border-color: #f0c9a3; color: #8a4c12; }
 .badge.developer { background: #e8f0e6; border-color: #b9d1b4; color: #2f5a2a; }
 .caption { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
