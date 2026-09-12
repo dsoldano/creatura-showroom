@@ -16,11 +16,13 @@
 </head>
 <body>
 <div id="app">
+  <div id="sky"></div>
   <canvas id="gl"></canvas>
 
   <header id="topbar">
     <div class="chip" id="titleChip"><span class="dot"></span><span id="titleText">Loading…</span></div>
     <div class="actions">
+      <button class="btn" id="btnLight" title="Toggle day / dusk lighting" aria-pressed="false">Dusk</button>
       <button class="btn" id="btnReset" title="Reset view">Reset view</button>
     </div>
   </header>
