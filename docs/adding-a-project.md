@@ -51,7 +51,7 @@ Every AI image is shown with the label "AI visualisation · indicative" and a cr
 
 ```bash
 tools/deploy.sh <slug>                                   # → https://walk.csoul.cloud/<slug>/  (hub index updates itself)
-node tools/check.mjs https://walk.csoul.cloud/<slug>/    # must be 12/12
+node tools/check.mjs https://walk.csoul.cloud/<slug>/    # must be all green (the count grows with each arc)
 node tools/shoot.mjs "https://walk.csoul.cloud/<slug>/?autostart=1200" /tmp/<slug>   # then LOOK at both PNGs
 ```
 

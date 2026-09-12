@@ -14,10 +14,11 @@ Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 ## Layout
 
 ```
-viewer/            index.html, app.js, style.css  — the Three.js viewer (ES modules from jsDelivr, no build step)
+viewer/            index.html, app.js, quality.js, sky.js, style.css  — the Three.js viewer (ES modules from jsDelivr, no build step)
 projects/<slug>/   site.json (everything about one project), plan.jpg (ground), postcards/ (+ manifest.json, ai-log.json), source/ (originals + PROVENANCE.md), og.jpg
 tools/             trace.html (tracer), make-ground.mjs, make-postcards.mjs, import-ai.mjs, deploy.sh, check.mjs, shoot.mjs, crop.mjs
-docs/              superpowers/specs (the approved design), adding-a-project.md, pitch/ (screenshot set)
+docs/              superpowers/specs (the approved designs), adding-a-project.md, pitch/ (screenshot set), checkpoints/ (per-sub-phase evidence)
+tests/             node --test unit tests for the pure viewer modules (quality.js)
 ```
 
 ## Commands
@@ -35,13 +36,16 @@ node tools/make-ground.mjs projects/belvedere/source/masterplan-4k.png projects/
 node tools/make-postcards.mjs projects/belvedere          # developer renders + a plan-detail crop per hotspot → manifest.json
 node tools/import-ai.mjs projects/belvedere selection.json # selected AI images → manifest (prepended) + ai-log.json
 tools/deploy.sh belvedere                                  # → /root/walk/belvedere (served by the walk-csoul container)
-node tools/check.mjs https://walk.csoul.cloud/belvedere/   # 12 live checks (boot, pins, postcards, interactions, tours, zero errors)
+node tools/check.mjs https://walk.csoul.cloud/belvedere/   # live checks: boot, pins, postcards, interactions, tours, per-tier boots + flicker contract + draw budgets, zero errors — must be all green
+node --test tests/                                         # unit tests for the pure viewer modules
 node tools/shoot.mjs <url> <outPrefix>                     # desktop + phone screenshots with console-error capture
 ```
 
-Viewer URL parameters: `?project=<base>` (dev only), `autostart=<ms>` (skip the intro, reveal in ms), `light=dusk`, `q=low`, `tourSpeed=<n>` (tests), `fx=alpha|nolog|stop|blur` (restore one pre-fix behaviour each, for bisecting flicker on a real phone), and hashes `#h=<hotspotId>`, `#tour=<tourId>`.
+Viewer URL parameters: `?project=<base>` (dev only), `autostart=<ms>` (skip the intro, reveal in ms), `light=dusk`, `q=high|mid|low` (quality tier; default: phones and tablets `mid`, everything else `high`; the checks run `low`), `tourSpeed=<n>` (tests), `fx=alpha|nolog|stop|blur` (restore one pre-fix behaviour each, for bisecting flicker on a real phone), and hashes `#h=<hotspotId>`, `#tour=<tourId>`.
 
 Mobile flicker (2026-09-12): fixed by an opaque canvas + sky dome, logarithmic depth with no coplanar surfaces, no backdrop-filter on phones, and an idle loop that keeps rendering at ~11 fps. Owner-verified on a real phone.
+
+Quality tiers (arc 2, B1): `mid` (phones) and `low` (checks) keep every one of those fixes; render-quality features land on `high` first. The sky is procedural (three/addons Sky) and is also the environment map that lights the model; `applyLighting(k)` in app.js is the one place day/dusk is defined. Design: `docs/superpowers/specs/2026-09-12-siteplan-arc2-render-media-design.md`.
 
 ## Hosting
 
