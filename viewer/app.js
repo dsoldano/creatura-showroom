@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 // ============ project ============
+const $ = s => document.querySelector(s);
 const q = new URLSearchParams(location.search);
 const BASE = (q.get('project') || './').replace(/\/?$/, '/');
 const site = await (await fetch(BASE + 'site.json')).json();
@@ -26,6 +28,8 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const labelRenderer = new CSS2DRenderer({ element: document.getElementById('labels') });
+let lastSize = '';
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xece7de, 1100, 2600);
@@ -43,8 +47,11 @@ controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 controls.enabled = false;
 
 const DEFAULT_VIEW = { radius: 0, phi: THREE.MathUtils.degToRad(52), theta: THREE.MathUtils.degToRad(28), target: new THREE.Vector3(0, 22, -siteD * 0.04) };
-function fitRadius() { const a = canvas.clientWidth / Math.max(1, canvas.clientHeight); return Math.max(siteW, siteD) * 1.75 * Math.max(1, 0.7 / a); }
-function fitView() { const a = canvas.clientWidth / Math.max(1, canvas.clientHeight); const portrait = a < 0.8;
+const isPhone = () => matchMedia('(max-width: 760px)').matches;
+const PANEL_W = 374, SHEET_H = 156;
+function visibleAspect() { const w = canvas.clientWidth, h = canvas.clientHeight; return isPhone() ? w / Math.max(1, h - SHEET_H) : (w - PANEL_W) / Math.max(1, h); }
+function fitRadius() { const a = visibleAspect(); return Math.max(siteW, siteD) * 1.75 * Math.max(1, 0.7 / a); }
+function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
   return { ...DEFAULT_VIEW, radius: fitRadius(), theta: THREE.MathUtils.degToRad(portrait ? 12 : 28), phi: THREE.MathUtils.degToRad(portrait ? 47 : 52) }; }
 
 // ============ lighting (day / dusk) ============
@@ -281,7 +288,6 @@ controls.addEventListener('change', () => {
 });
 
 // ============ UI ============
-const $ = s => document.querySelector(s);
 document.title = site.name + ' · site walkthrough';
 $('#titleText').textContent = site.name; $('#introName').textContent = site.name;
 $('#introLoc').textContent = [site.developer, site.location].filter(Boolean).join(' · ');
@@ -289,7 +295,7 @@ $('#introDisc').textContent = site.disclaimer || '';
 const northRad = THREE.MathUtils.degToRad(site.plan.northDeg ?? 0), northVec = new THREE.Vector3(Math.sin(northRad), 0, -Math.cos(northRad)), needle = $('#compass .needle');
 function updateCompass() { const a = Math.atan2(northVec.x, -northVec.z) + controls.getAzimuthalAngle(); needle.style.transform = `rotate(${THREE.MathUtils.radToDeg(a).toFixed(1)}deg)`; }
 $('#btnReset').addEventListener('click', () => flyTo(fitView(), 1400));
-window.addEventListener('keydown', e => { if (e.key === 'Escape') flyTo(fitView(), 1400); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { deselect(); flyTo(fitView(), 1400); } });
 const btnLight = $('#btnLight');
 function setLight(mode) { lightTarget = mode === 'dusk' ? 1 : 0; btnLight.textContent = lightTarget ? 'Day' : 'Dusk'; btnLight.setAttribute('aria-pressed', String(!!lightTarget)); }
 btnLight.addEventListener('click', () => setLight(lightTarget ? 'day' : 'dusk'));
@@ -298,13 +304,100 @@ setLight(lightK ? 'dusk' : 'day'); applyLighting(lightK);
 resize(); DEFAULT_VIEW.radius = fitRadius();
 applyView({ radius: 1500, phi: THREE.MathUtils.degToRad(8), theta: DEFAULT_VIEW.theta - 0.35, target: DEFAULT_VIEW.target });
 const explore = $('#btnExplore'); explore.disabled = false; explore.textContent = 'Explore the site';
-explore.addEventListener('click', () => { $('#intro').classList.add('hide'); flyTo(fitView(), 5000); });
-if (q.get('autostart')) { $('#intro').classList.add('hide'); flyTo(fitView(), +q.get('autostart') || 5000); }
+const afterReveal = () => { if (hashId) select(decodeURIComponent(hashId), true); };
+explore.addEventListener('click', () => { $('#intro').classList.add('hide'); flyTo(fitView(), 5000, afterReveal); });
+if (q.get('autostart')) { $('#intro').classList.add('hide'); flyTo(fitView(), +q.get('autostart') || 5000, afterReveal); }
+
+// ============ hotspots: pins, panel, themes, fly-to ============
+const manifest = await fetch(BASE + (site.postcards?.manifest || 'postcards/manifest.json')).then(r => r.ok ? r.json() : { images: {} }).catch(() => ({ images: {} }));
+const hotspots = site.hotspots.map(h => {
+  const vol = h.volume && volumeMeshes[h.volume]; const v = vol && vol.userData.volume;
+  const y = v ? (v.heightM || v.floors * FLOOR_H) + 8 : 1.4;
+  return { ...h, world: new THREE.Vector3(toX(h.pos[0]), y, toZ(h.pos[1])), isTower: !!h.volume, images: manifest.images[h.id] || [] };
+});
+const themeName = Object.fromEntries((site.themes || []).map(t => [t.id, t.name]));
+const KIND_LABEL = { developer: 'Developer render', ai: 'AI visualisation · indicative', plan: 'Plan detail' };
+const occluders = Object.values(volumeMeshes).filter(m => m.userData.volume.kind !== 'future');
+const pinEls = new Map(); let selected = null, activeTheme = null;
+
+// pins (DOM, positioned by CSS2DRenderer)
+for (const h of hotspots) {
+  const wrap = document.createElement('div'); wrap.className = 'pinwrap';
+  const b = document.createElement('button'); b.className = 'pin' + (h.isTower ? ' tower' : ''); b.textContent = String(h.n); b.dataset.name = h.name; b.dataset.id = h.id; b.type = 'button'; b.setAttribute('aria-label', h.n + ' ' + h.name);
+  b.addEventListener('click', e => { e.stopPropagation(); select(h.id, true); });
+  wrap.appendChild(b); const obj = new CSS2DObject(wrap); obj.position.copy(h.world); scene.add(obj); pinEls.set(h.id, b);
+}
+// selection ring on the ground
+const ring = new THREE.Mesh(new THREE.RingGeometry(5.2, 6.8, 48), new THREE.MeshBasicMaterial({ color: 0xc8772a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.45; ring.visible = false; scene.add(ring);
+
+const ray = new THREE.Raycaster(); let pinTick = 0; const tmpV = new THREE.Vector3();
+function updatePins(now) {
+  const camPos = camera.position;
+  if (ring.visible) { const k = 1 + 0.06 * Math.sin(now / 350); ring.scale.set(k, k, 1); }
+  const doRay = now - pinTick > 140; if (doRay) pinTick = now;
+  for (const h of hotspots) {
+    const el = pinEls.get(h.id), d = camPos.distanceTo(h.world);
+    el.style.setProperty('--s', THREE.MathUtils.clamp(1.3 - d / 900, 0.6, 1.15).toFixed(3));
+    el.classList.toggle('hidden', d > 1000);
+    if (doRay) { ray.set(camPos, tmpV.copy(h.world).sub(camPos).normalize()); const hit = ray.intersectObjects(occluders, false)[0]; el.classList.toggle('occluded', !!hit && hit.distance < d - 3 && selected !== h.id); }
+  }
+}
+
+// panel: facts, themes, list
+$('#facts').innerHTML = (site.facts || []).map(f => `<div class="${f.value.length > 22 ? 'wide' : ''}">${f.label}<b>${f.value}</b></div>`).join('');
+$('#themes').innerHTML = `<button aria-pressed="true" data-theme="">All</button>` + (site.themes || []).map(t => `<button aria-pressed="false" data-theme="${t.id}">${t.name}</button>`).join('');
+$('#themes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setTheme(b.dataset.theme || null); });
+{ const groups = new Map(); for (const h of hotspots) { const g = groups.get(h.theme) || []; g.push(h); groups.set(h.theme, g); }
+  $('#hotlist').innerHTML = [...groups].map(([t, list]) => `<li class="group" data-theme="${t}">${themeName[t] || t}</li>` + list.map(h => `<li class="item${h.isTower ? ' tower' : ''}" data-id="${h.id}" data-theme="${h.theme}"><span class="n">${h.n}</span><span class="nm">${h.name}</span><span class="kind">${h.images[0] ? (h.images[0].kind === 'developer' ? 'render' : h.images[0].kind) : ''}</span></li>`).join('')).join('');
+  $('#hotlist').addEventListener('click', e => { const li = e.target.closest('li.item'); if (li) select(li.dataset.id, true); }); }
+function setTheme(t) {
+  activeTheme = t;
+  document.querySelectorAll('#themes button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.theme || null) === t)));
+  document.querySelectorAll('#hotlist li').forEach(li => li.classList.toggle('filtered', !!t && li.dataset.theme !== t));  // items and group headings alike
+  for (const h of hotspots) pinEls.get(h.id).classList.toggle('dim', !!t && h.theme !== t);
+}
+const panel = $('#panel');
+$('#sheetHandle').addEventListener('click', () => panel.classList.toggle('collapsed'));
+function showHome() { $('#panelDetail').hidden = true; $('#panelHome').hidden = false; }
+function select(id, fly) {
+  const h = hotspots.find(x => x.id === id); if (!h) return;
+  selected = id;
+  for (const x of hotspots) pinEls.get(x.id).classList.toggle('active', x.id === id);
+  document.querySelectorAll('#hotlist li.item').forEach(li => li.classList.toggle('active', li.dataset.id === id));
+  ring.visible = !h.isTower; ring.position.set(h.world.x, 0.45, h.world.z);
+  const img = h.images[0];
+  $('#dNum').textContent = h.n; $('#dName').textContent = h.name; $('#dCaption').textContent = h.caption || '';
+  const im = $('#dImg'); if (img) { im.src = BASE + 'postcards/' + img.file; im.alt = h.name + ' — ' + KIND_LABEL[img.kind]; im.hidden = false; } else { im.removeAttribute('src'); im.hidden = true; }
+  $('#dBadge').textContent = img ? KIND_LABEL[img.kind] : ''; $('#dBadge').className = 'badge ' + (img ? img.kind : ''); $('#dCredit').textContent = img ? (img.credit || '') : '';
+  $('#panelHome').hidden = true; $('#panelDetail').hidden = false; $('#panelDetail').scrollTop = 0; panel.classList.remove('collapsed');
+  history.replaceState(null, '', '#h=' + encodeURIComponent(id));
+  if (fly) flyToHotspot(h);
+}
+function flyToHotspot(h) {
+  const v = h.view || {}; const target = h.world.clone(); target.y = v.targetY ?? 0;
+  flyTo({ radius: v.radius ?? 110, phi: THREE.MathUtils.degToRad(v.phiDeg ?? 52), theta: THREE.MathUtils.degToRad(v.thetaDeg ?? 30), target }, 1500);
+}
+function deselect() {
+  selected = null; ring.visible = false; for (const x of hotspots) pinEls.get(x.id).classList.remove('active');
+  document.querySelectorAll('#hotlist li.item').forEach(li => li.classList.remove('active')); showHome(); history.replaceState(null, '', location.pathname + location.search);
+}
+$('#btnBack').addEventListener('click', deselect);
+$('#btnFly').addEventListener('click', () => { const h = hotspots.find(x => x.id === selected); if (h) flyToHotspot(h); });
+const step = dir => { const list = hotspots.filter(h => !activeTheme || h.theme === activeTheme); const i = list.findIndex(h => h.id === selected); select(list[(i + dir + list.length) % list.length].id, true); };
+$('#btnNext').addEventListener('click', () => step(1)); $('#btnPrev').addEventListener('click', () => step(-1));
+canvas.addEventListener('pointerdown', () => { if (isPhone()) panel.classList.add('collapsed'); });
+const hashId = (location.hash.match(/h=([^&]+)/) || [])[1];
 
 // ============ loop ============
 function resize() {
-  const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio();
-  if (canvas.width !== Math.round(w * pr) || canvas.height !== Math.round(h * pr)) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio(), phone = isPhone(), key = w + 'x' + h + (phone ? 'p' : 'd');
+  if (key === lastSize) return; lastSize = key;
+  renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
+  // keep the orbit target centred in the part of the canvas the panel/sheet does not cover
+  if (phone) { camera.aspect = w / (h + SHEET_H); camera.setViewOffset(w, h + SHEET_H, 0, SHEET_H, w, h); }
+  else { camera.aspect = (w + PANEL_W) / h; camera.setViewOffset(w + PANEL_W, h, PANEL_W, 0, w, h); }
+  camera.updateProjectionMatrix();
 }
 let lastT = performance.now();
 renderer.setAnimationLoop(now => {
@@ -312,7 +405,7 @@ renderer.setAnimationLoop(now => {
   resize(); stepTween(now);
   if (Math.abs(lightTarget - lightK) > 0.001) { lightK += Math.sign(lightTarget - lightK) * Math.min(Math.abs(lightTarget - lightK), dt / 1.2); applyLighting(lightK); }
   if (controls.enabled) controls.update();
-  updateCompass(); renderer.render(scene, camera);
+  updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
 });
 
-window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight };
+window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, get selected() { return selected; } };

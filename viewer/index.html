@@ -18,6 +18,7 @@
 <div id="app">
   <div id="sky"></div>
   <canvas id="gl"></canvas>
+  <div id="labels" aria-hidden="true"></div>
 
   <header id="topbar">
     <div class="chip" id="titleChip"><span class="dot"></span><span id="titleText">Loading…</span></div>
@@ -27,8 +28,23 @@
     </div>
   </header>
 
-  <div id="compass" title="North"><div class="needle"><span>N</span></div></div>
+  <aside id="panel" class="collapsed" aria-label="Places on the site">
+    <button class="handle" id="sheetHandle" aria-label="Expand or collapse the list"><span></span></button>
+    <div id="panelHome">
+      <div class="facts" id="facts"></div>
+      <div class="themes" id="themes" role="group" aria-label="Filter by theme"></div>
+      <ol class="hotlist" id="hotlist"></ol>
+    </div>
+    <div id="panelDetail" hidden>
+      <button class="back" id="btnBack">‹ All places</button>
+      <div class="detail-head"><span class="num" id="dNum"></span><h2 id="dName"></h2></div>
+      <figure class="postcard"><img id="dImg" alt=""><figcaption><span class="badge" id="dBadge"></span> <span id="dCredit"></span></figcaption></figure>
+      <p class="caption" id="dCaption"></p>
+      <div class="detail-actions"><button class="btn" id="btnFly">Fly here</button><button class="btn" id="btnPrev">‹ Prev</button><button class="btn" id="btnNext">Next ›</button></div>
+    </div>
+  </aside>
 
+  <div id="compass" title="North"><div class="needle"><span>N</span></div></div>
   <footer id="credit">Built by <a href="https://cs.csoul.cloud" target="_blank" rel="noopener">CreatiSoul</a> · demonstration from public data</footer>
 
   <section id="intro" aria-live="polite">

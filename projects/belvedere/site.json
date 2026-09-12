@@ -331,14 +331,26 @@
       "id": "entrance-portal",
       "name": "Entrance portal",
       "theme": "arrival",
-      "pos": [313,720]
+      "pos": [313,720],
+      "caption": "The gateway off the access road where every visit begins. Cars pass beneath it to the arrival plaza, with the boulevard running straight ahead.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 5
+      }
     },
     {
       "n": 2,
       "id": "arrival-plaza",
       "name": "Arrival plaza",
       "theme": "arrival",
-      "pos": [310,678]
+      "pos": [310,678],
+      "caption": "The forecourt just inside the gate, where guests are received and cars turn toward the tower drop-offs and the basement ramp.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 5
+      }
     },
     {
       "n": 3,
@@ -348,7 +360,13 @@
       "pos": [316,633],
       "also": [
         [322,72]
-      ]
+      ],
+      "caption": "Ramps taking cars down to the three basement parking levels: one by the arrival plaza, one behind Towers A and B.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 4,
@@ -362,21 +380,39 @@
         [355,300],
         [458,455],
         [154,612]
-      ]
+      ],
+      "caption": "A covered set-down at the foot of each tower, so residents step from car to lobby without crossing the gardens.",
+      "view": {
+        "radius": 140,
+        "phiDeg": 52,
+        "thetaDeg": -110
+      }
     },
     {
       "n": 5,
       "id": "arrival-boulevard",
       "name": "Arrival boulevard",
       "theme": "arrival",
-      "pos": [298,564]
+      "pos": [298,564],
+      "caption": "The tree-lined spine from the gate into the heart of the site, with the celebration lawn on one side and the future towers on the other.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 5
+      }
     },
     {
       "n": 6,
       "id": "clubhouse-drop-off",
       "name": "Clubhouse drop-off",
       "theme": "arrival",
-      "pos": [394,641]
+      "pos": [394,641],
+      "caption": "The set-down for the clubhouse, beside the deck seating and the toddlers' play area at the entrance end of the site.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 40
+      }
     },
     {
       "n": 7,
@@ -386,49 +422,91 @@
       "pos": [375,235],
       "also": [
         [317,505]
-      ]
+      ],
+      "caption": "A continuous jogging and walking loop threading between the towers and around the amenity gardens. Brigade's render shows an elevated section with a running track.",
+      "view": {
+        "radius": 150,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 8,
       "id": "event-plaza",
       "name": "Event plaza",
       "theme": "social",
-      "pos": [322,450]
+      "pos": [322,450],
+      "caption": "A cluster of circular decks for gatherings and pop-up events, set between the stepped well garden and the central future tower.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 9,
       "id": "event-kiosk",
       "name": "Temporary event kiosk",
       "theme": "social",
-      "pos": [315,420]
+      "pos": [315,420],
+      "caption": "Space reserved on the event plaza for a temporary kiosk during festivals and markets.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 10,
       "id": "tennis-court",
       "name": "Tennis court",
       "theme": "sports",
-      "pos": [237,464]
+      "pos": [237,464],
+      "caption": "A full-size tennis court screened by trees, with the stepped well plaza beside it.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 11,
       "id": "stepped-well-plaza",
       "name": "Stepped well plaza",
       "theme": "play",
-      "pos": [231,407]
+      "pos": [231,407],
+      "caption": "A sunken circular plaza of descending steps around a pool of water, in the manner of a traditional stepped well. A place to sit low and out of the wind.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 12,
       "id": "kids-play-area",
       "name": "Kids' play area",
       "theme": "play",
-      "pos": [183,422]
+      "pos": [183,422],
+      "caption": "The main children's play area, laid out between the floral garden and the stepped well plaza.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": -50
+      }
     },
     {
       "n": 13,
       "id": "floral-garden",
       "name": "Floral garden",
       "theme": "gardens",
-      "pos": [166,430]
+      "pos": [166,430],
+      "caption": "A flowering garden at the corner of the amenity zone, next to the kids' play area.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": -70
+      }
     },
     {
       "n": 14,
@@ -438,14 +516,26 @@
       "pos": [166,380],
       "also": [
         [264,124]
-      ]
+      ],
+      "caption": "A small pavilion for shade and rest in the garden. The developer's render shows the pergola-covered paths of the community garden.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 15,
       "id": "skating-rink",
       "name": "Skating rink",
       "theme": "sports",
-      "pos": [206,349]
+      "pos": [206,349],
+      "caption": "An outdoor skating rink between the pickleball court and the stepped well plaza.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": -60
+      }
     },
     {
       "n": 16,
@@ -457,140 +547,260 @@
         [243,55],
         [509,335],
         [543,520]
-      ]
+      ],
+      "caption": "Visitor and short-stay parking at grade along the site edges. Resident parking is in the three basements.",
+      "view": {
+        "radius": 140,
+        "phiDeg": 52,
+        "thetaDeg": -100
+      }
     },
     {
       "n": 17,
       "id": "pickleball-court",
       "name": "Pickleball court",
       "theme": "sports",
-      "pos": [169,302]
+      "pos": [169,302],
+      "caption": "A pickleball court on the site edge, beside the skating rink.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": -80
+      }
     },
     {
       "n": 18,
       "id": "tree-court",
       "name": "Tree court",
       "theme": "gardens",
-      "pos": [217,282]
+      "pos": [217,282],
+      "caption": "A shaded court of trees between the pickleball court and the central lawn, with seating beneath the canopy.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 19,
       "id": "sculpture-court",
       "name": "Sculpture court",
       "theme": "gardens",
-      "pos": [281,173]
+      "pos": [281,173],
+      "caption": "A garden court arranged around sculpture, in the amenity garden between Tower A and the central lawn.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 20,
       "id": "toddlers-sand-pit",
       "name": "Toddlers' sand pit",
       "theme": "play",
-      "pos": [278,136]
+      "pos": [278,136],
+      "caption": "A sand pit for the youngest children, in the garden beside Tower A.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 21,
       "id": "kids-play-epdm",
       "name": "Kids' play area on EPDM",
       "theme": "play",
-      "pos": [320,141]
+      "pos": [320,141],
+      "caption": "Soft-surface play on EPDM rubber for older children, at the centre of the garden between the two Phase 1 towers.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 22,
       "id": "lawn-mound",
       "name": "Lawn mound",
       "theme": "gardens",
-      "pos": [312,107]
+      "pos": [312,107],
+      "caption": "A gently raised lawn for sitting and lying out, on the edge of the play garden.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 23,
       "id": "outdoor-reading",
       "name": "Outdoor reading",
       "theme": "gardens",
-      "pos": [351,117]
+      "pos": [351,117],
+      "caption": "A quiet corner for reading outdoors beside the lawn mound and the play garden.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 24,
       "id": "outdoor-gym",
       "name": "Outdoor gym",
       "theme": "sports",
-      "pos": [335,173]
+      "pos": [335,173],
+      "caption": "Open-air fitness equipment on the edge of the play garden, near Tower B.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 25,
       "id": "multipurpose-court",
       "name": "Multipurpose court",
       "theme": "sports",
-      "pos": [419,311]
+      "pos": [419,311],
+      "caption": "A multipurpose hard court marked for basketball, between the central future tower and Tower B.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 26,
       "id": "pet-park",
       "name": "Pet park",
       "theme": "gardens",
-      "pos": [513,517]
+      "pos": [513,517],
+      "caption": "A fenced park for dogs on the long garden strip, beside the butterfly garden.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 90
+      }
     },
     {
       "n": 27,
       "id": "butterfly-garden",
       "name": "Butterfly garden",
       "theme": "gardens",
-      "pos": [536,533]
+      "pos": [536,533],
+      "caption": "A garden planted to attract butterflies, on the garden strip near the pet park.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 90
+      }
     },
     {
       "n": 28,
       "id": "stepped-arena",
       "name": "Stepped arena",
       "theme": "social",
-      "pos": [515,425]
+      "pos": [515,425],
+      "caption": "A grassed amphitheatre of shallow steps facing the long garden strip, for outdoor screenings and performances.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 100
+      }
     },
     {
       "n": 29,
       "id": "outdoor-workstation",
       "name": "Outdoor workstation",
       "theme": "social",
-      "pos": [544,327]
+      "pos": [544,327],
+      "caption": "Sheltered outdoor desks along the garden walk, for working in the open air.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 110
+      }
     },
     {
       "n": 30,
       "id": "staircase",
       "name": "Staircase",
       "theme": "social",
-      "pos": [538,272]
+      "pos": [538,272],
+      "caption": "A landscaped stair linking the garden walk to the higher ground beside Tower B.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 110
+      }
     },
     {
       "n": 31,
       "id": "nature-play",
       "name": "Nature play",
       "theme": "play",
-      "pos": [560,243]
+      "pos": [560,243],
+      "caption": "A natural-materials play area on the garden strip, near the outdoor picnic lawn.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 120
+      }
     },
     {
       "n": 32,
       "id": "outdoor-picnic",
       "name": "Outdoor picnic",
       "theme": "gardens",
-      "pos": [583,203]
+      "pos": [583,203],
+      "caption": "A lawn for picnics at the far end of the garden strip, below the yoga lawn.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 120
+      }
     },
     {
       "n": 33,
       "id": "yoga-lawn",
       "name": "Yoga lawn",
       "theme": "gardens",
-      "pos": [569,152]
+      "pos": [569,152],
+      "caption": "A lawn set aside for yoga and stretching at the far corner of the site, beside the meditation deck.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 150
+      }
     },
     {
       "n": 34,
       "id": "meditation-deck",
       "name": "Meditation deck",
       "theme": "gardens",
-      "pos": [580,88]
+      "pos": [580,88],
+      "caption": "Two small round pavilions for meditation at the quietest tip of the site, furthest from the entrance.",
+      "view": {
+        "radius": 90,
+        "phiDeg": 52,
+        "thetaDeg": 160
+      }
     },
     {
       "n": 35,
       "id": "celebration-lawn",
       "name": "Celebration lawn",
       "theme": "social",
-      "pos": [394,605]
+      "pos": [394,605],
+      "caption": "The largest open lawn, beside the arrival boulevard, for community celebrations and festivals.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 36,
@@ -600,35 +810,65 @@
       "pos": [394,577],
       "also": [
         [513,550]
-      ]
+      ],
+      "caption": "Deck seating overlooking the celebration lawn. Brigade's render shows the circular seating decks with a curved pergola.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 37,
       "id": "promenade-stair-plaza",
       "name": "Promenade stair plaza",
       "theme": "social",
-      "pos": [478,574]
+      "pos": [478,574],
+      "caption": "A stair plaza joining the promenade along the garden strip to the clubhouse forecourt.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 30
+      }
     },
     {
       "n": 38,
       "id": "toddlers-play-area",
       "name": "Toddlers' play area",
       "theme": "play",
-      "pos": [518,605]
+      "pos": [518,605],
+      "caption": "A play area for toddlers beside the clubhouse.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 70
+      }
     },
     {
       "n": 39,
       "id": "viewing-deck",
       "name": "Viewing deck",
       "theme": "social",
-      "pos": [525,575]
+      "pos": [525,575],
+      "caption": "A raised deck for looking out over the gardens on the long strip.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 80
+      }
     },
     {
       "n": 40,
       "id": "deck-seating-2",
       "name": "Deck seating",
       "theme": "social",
-      "pos": [524,551]
+      "pos": [524,551],
+      "caption": "Deck seating on the garden walk, near the pet park.",
+      "view": {
+        "radius": 110,
+        "phiDeg": 52,
+        "thetaDeg": 80
+      }
     },
     {
       "n": 41,
@@ -638,7 +878,13 @@
       "pos": [123,40],
       "also": [
         [160,732]
-      ]
+      ],
+      "caption": "Utility and services buildings tucked into two corners of the site.",
+      "view": {
+        "radius": 120,
+        "phiDeg": 52,
+        "thetaDeg": -120
+      }
     },
     {
       "n": "A",
@@ -646,7 +892,14 @@
       "name": "Tower A",
       "theme": "towers",
       "pos": [188,166],
-      "volume": "tower-a"
+      "volume": "tower-a",
+      "caption": "One of the two Phase 1 towers: three basements, stilt, ground and 43 floors. Homes range from 1 BHK to 3.5 BHK.",
+      "view": {
+        "radius": 360,
+        "phiDeg": 60,
+        "thetaDeg": -135,
+        "targetY": 70
+      }
     },
     {
       "n": "B",
@@ -654,7 +907,14 @@
       "name": "Tower B",
       "theme": "towers",
       "pos": [452,180],
-      "volume": "tower-b"
+      "volume": "tower-b",
+      "caption": "The second Phase 1 tower, with the same 3B+S+G+43 profile. Phase 1 as a whole offers 773 homes.",
+      "view": {
+        "radius": 360,
+        "phiDeg": 60,
+        "thetaDeg": 135,
+        "targetY": 70
+      }
     },
     {
       "n": "C",
@@ -662,8 +922,75 @@
       "name": "Clubhouse",
       "theme": "towers",
       "pos": [452,650],
-      "volume": "clubhouse"
+      "volume": "clubhouse",
+      "caption": "The 24,000 sq ft clubhouse, shown here as a low block beside its drop-off. The developer's render shows a two-storey stone-and-glass building.",
+      "view": {
+        "radius": 130,
+        "phiDeg": 55,
+        "thetaDeg": 60,
+        "targetY": 4
+      }
     }
   ],
-  "tours": []
+  "tours": [],
+  "developerRenders": [
+    {
+      "file": "source/render-exterior-aerial.webp",
+      "hotspots": [
+        "tower-a-info"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-tennis-court-exterior-elevated.webp",
+      "hotspots": [
+        "tennis-court",
+        "tower-b-info"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-building-exterior.webp",
+      "hotspots": [
+        "clubhouse-info",
+        "clubhouse-drop-off"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-garden-outdoor-elevated.webp",
+      "hotspots": [
+        "jogging-loop"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-community-garden-outdoor-ground-level.webp",
+      "hotspots": [
+        "garden-pavilion",
+        "tree-court"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-landscaped-courtyard-exterior-street-level.webp",
+      "hotspots": [
+        "arrival-plaza"
+      ],
+      "credit": "Brigade Group render"
+    },
+    {
+      "file": "source/render-seating-area-outdoor-ground.webp",
+      "hotspots": [
+        "event-plaza",
+        "deck-seating",
+        "deck-seating-2"
+      ],
+      "credit": "Brigade Group render"
+    }
+  ],
+  "postcards": {
+    "manifest": "postcards/manifest.json",
+    "planSource": "source/masterplan-4k.png"
+  }
 }
