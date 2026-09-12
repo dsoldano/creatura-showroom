@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Site walkthrough</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="gl"></canvas>
+
+  <header id="topbar">
+    <div class="chip" id="titleChip"><span class="dot"></span><span id="titleText">Loading…</span></div>
+    <div class="actions">
+      <button class="btn" id="btnReset" title="Reset view">Reset view</button>
+    </div>
+  </header>
+
+  <div id="compass" title="North"><div class="needle"><span>N</span></div></div>
+
+  <footer id="credit">Built by <a href="https://cs.csoul.cloud" target="_blank" rel="noopener">CreatiSoul</a> · demonstration from public data</footer>
+
+  <section id="intro" aria-live="polite">
+    <div class="card">
+      <div class="eyebrow">CreatiSoul demonstration</div>
+      <h1 id="introName">…</h1>
+      <p class="sub" id="introLoc"></p>
+      <p class="disc" id="introDisc"></p>
+      <button class="btn primary" id="btnExplore" disabled>Loading the site…</button>
+    </div>
+  </section>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

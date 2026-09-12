@@ -1,0 +1,52 @@
+:root {
+  --ink: #1d1a16; --muted: #6b655c; --paper: #f7f3ec; --line: rgba(29,26,22,.12);
+  --accent: #c8772a; --accent-ink: #fff;
+  --sky-top: #cfe0f2; --sky-bottom: #f1ede4;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 70%); }
+#app { position: fixed; inset: 0; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+#topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: max(12px, env(safe-area-inset-top)) 14px 0; pointer-events: none; }
+#topbar > * { pointer-events: auto; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(247,243,236,.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px 7px 10px; font-weight: 600; letter-spacing: .01em; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.btn { font: inherit; font-weight: 600; color: var(--ink); background: rgba(247,243,236,.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.btn:hover { background: #fff; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; padding: 12px 22px; font-size: 15px; }
+.btn.primary:hover { filter: brightness(1.05); }
+.btn[disabled] { opacity: .55; cursor: default; }
+
+#compass { position: absolute; left: 14px; bottom: max(44px, calc(env(safe-area-inset-bottom) + 44px)); width: 52px; height: 52px; border-radius: 50%;
+  background: rgba(247,243,236,.88); border: 1px solid var(--line); backdrop-filter: blur(8px); }
+#compass .needle { position: absolute; inset: 0; transform: rotate(0deg); transition: transform .08s linear; }
+#compass .needle::before { content: ""; position: absolute; left: 50%; top: 7px; margin-left: -6px; border: 6px solid transparent; border-top: 0; border-bottom: 16px solid var(--accent); }
+#compass .needle::after { content: ""; position: absolute; left: 50%; top: 23px; margin-left: -6px; border: 6px solid transparent; border-bottom: 0; border-top: 16px solid #b8b0a4; }
+#compass .needle span { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--paper); font-size: 9px; font-weight: 800; color: var(--ink); display: grid; place-items: center; }
+
+#credit { position: absolute; right: 14px; bottom: max(12px, env(safe-area-inset-bottom)); font-size: 12px; color: var(--muted);
+  background: rgba(247,243,236,.7); padding: 4px 10px; border-radius: 999px; }
+#credit a { color: inherit; font-weight: 600; text-decoration: none; }
+
+#intro { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(29,26,22,.28); backdrop-filter: blur(6px);
+  transition: opacity .6s ease; }
+#intro.hide { opacity: 0; pointer-events: none; }
+#intro .card { width: min(520px, calc(100% - 32px)); background: var(--paper); border-radius: 18px; padding: 28px 28px 24px;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,.45); }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+#intro h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 8px 0 4px; letter-spacing: -.01em; }
+#intro .sub { margin: 0 0 14px; color: var(--muted); font-weight: 500; }
+#intro .disc { margin: 0 0 18px; font-size: 13px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; }
+
+@media (max-width: 640px) {
+  #topbar { padding-left: 10px; padding-right: 10px; }
+  .btn { padding: 8px 12px; }
+  #credit { left: 10px; right: auto; bottom: max(10px, env(safe-area-inset-bottom)); }
+  #compass { bottom: max(46px, calc(env(safe-area-inset-bottom) + 46px)); left: auto; right: 10px; }
+}

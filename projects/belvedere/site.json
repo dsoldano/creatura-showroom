@@ -36,8 +36,10 @@
       "w": 620,
       "h": 828
     },
-    "northDeg": null,
-    "note": "All coordinates are pixels in the 1200×848 source image. crop is the region draped as ground."
+    "northDeg": 135,
+    "note": "All coordinates are pixels in the 1200×848 source image. crop is the region draped as ground.",
+    "northNote": "Screen angle of north, clockwise from image-up, read from the plan arrow (approx).",
+    "ground": "plan.jpg"
   },
   "scale": {
     "acres": 10.75,
@@ -48,8 +50,8 @@
   },
   "boundary": [
     [80,38],
-    [628,48],
-    [497,835],
+    [625,48],
+    [494,835],
     [112,835]
   ],
   "volumes": [

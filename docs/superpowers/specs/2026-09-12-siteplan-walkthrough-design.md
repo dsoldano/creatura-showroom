@@ -35,8 +35,8 @@ Infrastructure verified: `mockups-csoul` nginx container pattern (Traefik labels
 One JSON file per project (`projects/<slug>/site.json`) drives the viewer. Coordinates are plan pixels; scale in metres per pixel is derived from the site polygon area and the acreage (Belvedere: about 0.33 m/px, so a 43-floor tower of about 140 m is about 420 plan units tall).
 
 - Ground: the plan image cropped to the site trapezoid, legend removed, draped on a plane.
-- Volumes: seven traced footprints. Towers A and B as cream massing with a faint band per floor and a darker crown. Five future blocks as translucent ghost material tagged "Phase 2".
-- Earned 3D detail: pool and skating rink as recessed glossy water; three courts as raised slabs with painted lines; stepped-well plaza as concentric rings; clubhouse as a low block; pergolas as thin frames.
+- Volumes: six traced footprints (corrected on day 1 from the plan itself): towers A and B as cream massing with a slab line per floor; three future towers as translucent ghost material tagged "Phase 2"; one low block beside the clubhouse drop-off modelled as the clubhouse. Plus two one-storey service blocks.
+- Earned 3D detail: skating rink as a smooth recessed surface, the stepped-well plaza as concentric rings with a water centre, the kids' splash area as shallow water; three courts as raised slabs with painted lines; the entrance portal; two meditation domes. There is NO swimming pool at grade on the published plan (the pools are presumably on the clubhouse), so none is modelled.
 - Trees: instanced simple canopies placed by sampling green pixels along the site perimeter in the plan image. No hand placement.
 - Hotspots: all 41 legend items with plan position, theme, caption, camera framing and postcard reference.
 - Lighting: one directional sun, sky ambient, contact shadows; day and dusk presets.
@@ -77,7 +77,7 @@ One JSON file per project (`projects/<slug>/site.json`) drives the viewer. Coord
 - Host: new `nginx:alpine` container `walk-csoul`, volume `/root/walk` -> html read-only, on the `coolify` network, Traefik labels copied from `mockups-csoul` with `Host(walk.csoul.cloud)` and the letsencrypt resolver. Demo URL `https://walk.csoul.cloud/belvedere/`; root index lists projects.
 - Owner action, requested on day 1 so the cert issues before day 6: Hostinger DNS A record `walk.csoul.cloud -> 62.72.56.130`, not proxied. Until it resolves, verify with Playwright host mapping.
 - Verification after every day: Playwright screenshots at 1440 and 390 widths read as images. `tools/check.mjs` against the live URL: canvas non-blank, 41 pins present, every postcard URL returns a real non-empty file, three tours complete, zero console errors. Frame rate is not measurable on this box's software renderer, so the final gate is the owner clicking through on a real phone.
-- Stated limits (in the intro overlay and the pitch): ground is a picture, not terrain; towers are massing, not the Bofill facade; Phase 2 blocks are read off the plan; AI images are indicative; assets come from mirror copies; branding swaps if a developer objects.
+- Stated limits (in the intro overlay and the pitch): ground is a picture, not terrain, and that picture is an AI 4K upscale of the published plan (verified faithful for geometry; a couple of baked-in legend digits drift slightly, the 3D pins carry the authoritative numbers); towers are massing, not the Bofill facade; Phase 2 blocks are read off the plan; AI images are indicative; assets come from mirror copies; branding swaps if a developer objects.
 
 ## The week (one checkpoint per day, owner approves before the next)
 
