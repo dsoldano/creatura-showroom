@@ -360,13 +360,13 @@ for (const tier of ['low', 'mid', 'high']) {
   const p = await b.newPage({ viewport: { width: 1200, height: 800 } }); const errs = [];
   p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(base + '&q=' + tier, { waitUntil: 'networkidle', timeout: 90000 }); await p.waitForTimeout(6000);
-  const f = await p.evaluate(() => { const w = window.__walk; const gl = w.renderer.getContext(); return { q: w.quality, env: !!w.scene.environment, log: w.renderer.capabilities.logarithmicDepthBuffer, alpha: !!gl.getContextAttributes().alpha, plinth: w.plinthTopY, stats: w.stats(), exposure: w.renderer.toneMappingExposure, sunY: +w.scene.children.find(o => o.isDirectionalLight).position.y.toFixed(0) }; });
+  const f = await p.evaluate(() => { const w = window.__walk; const gl = w.renderer.getContext(); return { q: w.quality, env: !!w.scene.environment, log: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), plinth: w.plinthTopY, stats: w.stats(), exposure: w.renderer.toneMappingExposure, sunY: +w.scene.children.find(o => o.isDirectionalLight).position.y.toFixed(0) }; });
   console.log(tier, JSON.stringify(f), errs.length ? 'ERRORS: ' + errs.join(' | ') : 'no errors'); await p.close();
 }
 await b.close();
 ```
 Run: `cd /root/projects/siteplan-walk && node tools/_b1-facts.mjs`
-Expected: three lines, `no errors` on each; `low` → `env:false`, `mid`/`high` → `env:true`; all `log:true, alpha:false, plinth:-0.3`; `stats.calls` between 40 and 80, `triangles` < 100000; `q` equals the requested tier.
+Expected: three lines, `no errors` on each; `low` → `env:false`, `mid`/`high` → `env:true`; all `log:true, clearAlpha:1, plinth:-0.3`; `stats.calls` ≈ 87 and `triangles` ≈ 98k (whole frame incl. the shadow pass; master measured 55/56k because three's automatic reset runs after the shadow pass); `q` equals the requested tier.
 
 - [ ] **Step 13: Run the existing checks (still 12) against the dev server**
 
@@ -390,7 +390,7 @@ Claude-Session: https://claude.ai/code/session_01Ww5MSzHLNRbzu3Hzh5J8zF"
 - Modify: `tools/check.mjs` (error-sink lines 7; after the `if (state) { … }` block, before `ok('zero console errors …')` on line 44)
 
 **Interfaces:**
-- Consumes: `window.__walk.quality`, `.stats()`, `.plinthTopY`, `.scene.environment`, `.renderer.capabilities.logarithmicDepthBuffer`, `.renderer.getContext().getContextAttributes().alpha` (Task 3).
+- Consumes: `window.__walk.quality`, `.stats()`, `.plinthTopY`, `.scene.environment`, `.renderer.capabilities.logarithmicDepthBuffer`, `.renderer.getClearAlpha()` (Task 3).
 - Produces: 7 new named checks: `tier low|mid|high boots as itself …` (3), `tier low|mid|high draw budget …` (3), `no shader compile errors on any tier` (1). Total becomes 19.
 
 - [ ] **Step 1: Turn the error sink into a reusable `wire(page)`**
@@ -409,10 +409,10 @@ const errs = []; const wire = pg => { pg.on('pageerror', e => errs.push('pageerr
 Insert immediately after the closing `}` of `if (state) { … }` (the line before `ok('zero console errors / failed requests', …)`):
 ```js
 // ---- quality tiers: each boots as itself, keeps the flicker contract (opaque canvas, log depth, plinth cap -0.3), stays under its draw budget, compiles every shader ----
-const CEIL = { low: [80, 150000], mid: [100, 250000], high: [180, 600000] };   // [draw calls, triangles] — recalibrate when a sub-phase adds geometry (spec §Tiers)
+const CEIL = { low: [120, 200000], mid: [140, 300000], high: [220, 700000] };   // [draw calls, triangles] per WHOLE frame incl. the shadow pass (B1 baseline 87 / 98k); recalibrate when a sub-phase adds geometry
 const WANT_ENV = { low: false, mid: true, high: true };
-const tierFacts = () => { const w = window.__walk; if (!w) return null; const gl = w.renderer.getContext();
-  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, alpha: !!gl.getContextAttributes().alpha, env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY }; };
+const tierFacts = () => { const w = window.__walk; if (!w) return null;
+  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
 const facts = { low: state ? await p.evaluate(tierFacts) : null };
 for (const tier of ['mid', 'high']) {
   const pg = await ctx.newPage(); wire(pg);
@@ -423,7 +423,7 @@ for (const tier of ['mid', 'high']) {
 for (const tier of ['low', 'mid', 'high']) {
   const f = facts[tier];
   ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth on, opaque canvas, plinth cap -0.3)`,
-    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.alpha === false && f.plinthTopY === -0.3, JSON.stringify(f));
+    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3, JSON.stringify(f));
   ok(`tier ${tier} draw budget (≤${CEIL[tier][0]} calls, ≤${CEIL[tier][1]} tris)`, !!f && f.stats.calls > 0 && f.stats.calls <= CEIL[tier][0] && f.stats.triangles <= CEIL[tier][1], f ? JSON.stringify(f.stats) : 'no facts');
 }
 ok('no shader compile errors on any tier', !errs.some(e => /Shader Error|WebGLProgram|WebGLShader|GLSL/i.test(e)), errs.filter(e => /Shader|GLSL/i.test(e)).slice(0, 3).join(' | '));
