@@ -7,14 +7,14 @@ Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 ## What it is, honestly
 
 - The ground is the developer's published master plan (AI-upscaled to 4K for crispness), clipped to the site boundary on a plinth.
-- Towers are massing extruded from traced footprints at true floor count, not the architect's facade. Phase 2 blocks are ghosts.
+- Towers are massing extruded from traced footprints at true floor count, dressed with a facade rhythm (paired fins, balcony bands, stepped crown) read from the developer's published render, not the architect's drawings. Phase 2 blocks are ghosts with a faint rhythm.
 - Courts, rink, stepped well, plazas, portal and domes are simple 3D read off the plan. Trees are sampled from the plan's greens at load time.
 - Postcards are one of three kinds, always labelled: **developer render**, **AI visualisation · indicative**, or **plan detail**. Nothing is invented beyond the plan's legend and the developer's public facts.
 
 ## Layout
 
 ```
-viewer/            index.html, app.js, quality.js, sky.js, style.css  — the Three.js viewer (ES modules from jsDelivr, no build step)
+viewer/            index.html, app.js, quality.js, sky.js, facade.js, facade-geom.js, style.css  — the Three.js viewer (ES modules from jsDelivr, no build step)
 projects/<slug>/   site.json (everything about one project), plan.jpg (ground), postcards/ (+ manifest.json, ai-log.json), source/ (originals + PROVENANCE.md), og.jpg
 tools/             trace.html (tracer), make-ground.mjs, make-postcards.mjs, import-ai.mjs, deploy.sh, check.mjs, shoot.mjs, crop.mjs
 docs/              superpowers/specs (the approved designs), adding-a-project.md, pitch/ (screenshot set), checkpoints/ (per-sub-phase evidence)
@@ -37,7 +37,7 @@ node tools/make-postcards.mjs projects/belvedere          # developer renders + 
 node tools/import-ai.mjs projects/belvedere selection.json # selected AI images → manifest (prepended) + ai-log.json
 tools/deploy.sh belvedere                                  # → /root/walk/belvedere (served by the walk-csoul container)
 node tools/check.mjs https://walk.csoul.cloud/belvedere/   # live checks: boot, pins, postcards, interactions, tours, per-tier boots + flicker contract + draw budgets, zero errors — must be all green
-node --test tests/                                         # unit tests for the pure viewer modules
+node --test tests/*.test.mjs                               # unit tests for the pure viewer modules (quality, facade geometry)
 node tools/shoot.mjs <url> <outPrefix>                     # desktop + phone screenshots with console-error capture
 ```
 

@@ -28,6 +28,7 @@ Copy the shape of `projects/belvedere/site.json`:
 - `name`, `developer`, `location`, `disclaimer`, `facts[]` (label/value; long values get the wide row).
 - `themes[]` (six is right) and each hotspot's `theme`, `caption` (two sentences, from the legend and public facts only, no compass words unless you have checked the arrow), `view` (`radius`, `phiDeg`, `thetaDeg`, `targetY`; θ=0 puts the camera on the plan's bottom side, +90° on the right, ±180° on the top, −90° on the left — aim from outside the site so ghost towers do not sit between camera and subject).
 - `developerRenders[]`: each render file → the hotspot ids it illustrates.
+- `facades` (optional), per volume kind: `{style: fins|stoneGlass|banded|ghost|plain, bayM, finW, finGap, recess, slabH, crownH, baseH, fin, band, glass, source}`. `fins` and `stoneGlass` build instanced fins, corner piers, slab rings and a crown from the traced footprint around a glazed core; `ghost` takes `rhythm: faint|none`. Without the block every volume renders as plain massing. If you read a rhythm off a developer render, say so in `source` and in the `disclaimer` — never present it as the architect's facade.
 - `tours[]`: keyframes `{t 0..1, pos [px,py], radius, phiDeg, thetaDeg, targetY?, hotspot?, overview?}`; keep consecutive θ differences under 180°; end with an `overview: true` frame.
 
 ## 3. Build assets (20 min)
