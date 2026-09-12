@@ -1,6 +1,6 @@
 # Site-plan walkthrough demo — Brigade Belvedere (design + week plan)
 
-Date: 2026-09-12. Status: design approved section by section in the brainstorm; this file is the spec. On day 1 copy it into the new repo as `docs/superpowers/specs/2026-09-12-siteplan-walkthrough-design.md`.
+Date: 2026-09-12. Status: DELIVERED. All seven days shipped on 2026-09-12; live at https://walk.csoul.cloud/belvedere/; 12/12 live checks; owner's phone test passed ("phone feels smooth, tours play fine"). Deviations from the plan are noted inline: 6 footprints not 7, no pool at grade, 14 AI postcards not about 10, deploy on day 5 not 6, ground is a 4K AI upscale, link-preview tags added on day 7.
 
 ## Context
 

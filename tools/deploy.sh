@@ -8,6 +8,7 @@ SRC="$REPO/projects/$SLUG"; DST="$ROOT/$SLUG"
 mkdir -p "$DST"
 rsync -a --delete --exclude 'source/' --exclude '*.md' "$SRC/" "$DST/"
 rsync -a "$REPO/viewer/" "$DST/"
+python3 "$REPO/tools/og.py" "$DST" "$SLUG"   # link-preview tags from site.json (+ og.jpg if present)
 # hub index + robots (demo: keep out of search engines)
 python3 - "$ROOT" <<'PY'
 import json, os, sys
