@@ -60,7 +60,7 @@ One JSON file per project (`projects/<slug>/site.json`) drives the viewer. Coord
 
 ### 4. AI postcard pipeline
 
-- About 10 hotspots lack a developer render: pool and kids' pool, skating rink, stepped-well plaza, clubhouse drop-off, event plaza, pet park, yoga lawn and meditation deck, outdoor workstation, kids' play on EPDM, arrival portal. One 3:2 landscape each.
+- Fourteen hotspots were chosen for AI postcards on day 5 (the spec's estimate was about 10): pool and kids' pool, skating rink, stepped-well plaza, clubhouse drop-off, event plaza, pet park, yoga lawn and meditation deck, outdoor workstation, kids' play on EPDM, arrival portal. One 3:2 landscape each.
 - Consistency: every prompt carries the same two references (aerial tower render, elevated garden render), same time of day, same lens feel, same warm late-afternoon grade. Model Nano Banana Pro (fallback GPT Image 2.5). Preflight cost, then one batch via `generate_image_batch`.
 - Honesty rule: every AI image labelled; nothing invented beyond the legend; never presented as a developer render.
 - Selection: two candidates per hotspot, screenshot review, pick one, reject wrong tower counts or impossible geometry. Budget a second short batch.
@@ -75,7 +75,7 @@ One JSON file per project (`projects/<slug>/site.json`) drives the viewer. Coord
 ### 6. Hosting, verification, limits
 
 - Host: new `nginx:alpine` container `walk-csoul`, volume `/root/walk` -> html read-only, on the `coolify` network, Traefik labels copied from `mockups-csoul` with `Host(walk.csoul.cloud)` and the letsencrypt resolver. Demo URL `https://walk.csoul.cloud/belvedere/`; root index lists projects.
-- Owner action, requested on day 1 so the cert issues before day 6: Hostinger DNS A record `walk.csoul.cloud -> 62.72.56.130`, not proxied. Until it resolves, verify with Playwright host mapping.
+- DNS A record `walk.csoul.cloud -> 62.72.56.130` added by the owner on day 4. The `walk-csoul` container and first deploy went live on day 5 (a day early, once DNS resolved); `tools/deploy.sh <slug>` republishes.
 - Verification after every day: Playwright screenshots at 1440 and 390 widths read as images. `tools/check.mjs` against the live URL: canvas non-blank, 41 pins present, every postcard URL returns a real non-empty file, three tours complete, zero console errors. Frame rate is not measurable on this box's software renderer, so the final gate is the owner clicking through on a real phone.
 - Stated limits (in the intro overlay and the pitch): ground is a picture, not terrain, and that picture is an AI 4K upscale of the published plan (verified faithful for geometry; a couple of baked-in legend digits drift slightly, the 3D pins carry the authoritative numbers); towers are massing, not the Bofill facade; Phase 2 blocks are read off the plan; AI images are indicative; assets come from mirror copies; branding swaps if a developer objects.
 

@@ -1,0 +1,184 @@
+[
+  {
+    "id": "entrance-portal",
+    "file": "ai-entrance-portal.jpg",
+    "jobId": "d7c46c2c-5e0b-46ee-99e0-d6c1138eeaf2",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "main entrance gateway: stone-clad piers, slim canopy over the entry road, security cabin, tree-lined approach",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "arrival-boulevard",
+    "file": "ai-arrival-boulevard.jpg",
+    "jobId": "c39b11a5-990d-479b-a078-87c9030ff0fc",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "tree-lined arrival boulevard with a planted central strip",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "stepped-well-plaza",
+    "file": "ai-stepped-well-plaza.jpg",
+    "jobId": "16d17130-223c-47ab-bcd2-1b6213e4e42c",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "circular sunken plaza of concentric sandstone steps descending to a round pool",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "skating-rink",
+    "file": "ai-skating-rink.jpg",
+    "jobId": "f210935a-0050-41c6-ad44-0837d286137a",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "oval outdoor skating rink with a pale-blue surface and stone kerb, pickleball court beyond",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "kids-play-epdm",
+    "file": "ai-kids-play-epdm.jpg",
+    "jobId": "94bc045f-f9e5-43cf-a9b5-c7c94f72f1e3",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "children's play garden: EPDM surfacing, play structures, splash feature, sand pit, lawn mound",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "multipurpose-court",
+    "file": "ai-multipurpose-court.jpg",
+    "jobId": "42e8e2f1-23a1-4a8c-bf10-e4731e1e4589",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "blue multipurpose hard court marked for basketball, low fencing and hedges",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "pet-park",
+    "file": "ai-pet-park.jpg",
+    "jobId": "a17b7f67-fc95-4c34-9698-683e0d956bd2",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "fenced pet park with lawn, agility elements, timber fencing",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "stepped-arena",
+    "file": "ai-stepped-arena.jpg",
+    "jobId": "04a128ab-24f3-4929-8526-7194b1b64ae3",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "grassed amphitheatre of shallow curved turf steps facing a small stage",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "outdoor-workstation",
+    "file": "ai-outdoor-workstation.jpg",
+    "jobId": "4b367bdb-ba56-484e-96a0-f6148416a742",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "sheltered outdoor work desks under a timber pergola on a garden walk",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "yoga-lawn",
+    "file": "ai-yoga-lawn.jpg",
+    "jobId": "349d84be-4c02-4631-aa52-51e4f3434c7e",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "oval yoga lawn edged with flowering shrubs, mats laid out",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "meditation-deck",
+    "file": "ai-meditation-deck.jpg",
+    "jobId": "e3c3aa3b-48da-45be-8c63-c2c7ad1df6f2",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "two small round domed meditation pavilions on a timber deck",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "celebration-lawn",
+    "file": "ai-celebration-lawn.jpg",
+    "jobId": "e0e0fb61-b5b3-422d-9006-55cd025202a7",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "large open celebration lawn beside the boulevard with pergola deck seating",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "tower-drop-off",
+    "file": "ai-tower-drop-off.jpg",
+    "jobId": "3f732105-7347-4fc8-8c7c-f3519633fe04",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "covered tower drop-off: cantilevered porte-cochere canopy at the tower base",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  },
+  {
+    "id": "pickleball-court",
+    "file": "ai-pickleball-court.jpg",
+    "jobId": "81fcf9b7-f4e6-433f-bb04-162067b227fb",
+    "model": "nano_banana_pro (served as nano_banana_2)",
+    "references": [
+      "brigade-belvedere-exterior-aerial.webp",
+      "brigade-belvedere-garden-outdoor-elevated.webp"
+    ],
+    "subject": "pair of pickleball courts beside the oval skating rink",
+    "promptPrefix": "Photorealistic architectural visualisation, late-afternoon warm sunlight (yoga/meditation: soft early-morning), eye-level 35mm or elevated three-quarter view, new residential development in Bengaluru; match the reference images: cream-and-white towers with vertical fins, brick-paved paths, tropical planting, timber pergolas; no text, no signage, no logos, no one looking at camera.",
+    "date": "2026-09-12"
+  }
+]

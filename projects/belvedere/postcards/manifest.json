@@ -146,6 +146,11 @@
     ],
     "entrance-portal": [
       {
+        "file": "ai-entrance-portal.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-entrance-portal.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
@@ -160,12 +165,22 @@
     ],
     "tower-drop-off": [
       {
+        "file": "ai-tower-drop-off.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-tower-drop-off.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
       }
     ],
     "arrival-boulevard": [
+      {
+        "file": "ai-arrival-boulevard.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-arrival-boulevard.jpg",
         "kind": "plan",
@@ -180,6 +195,11 @@
       }
     ],
     "stepped-well-plaza": [
+      {
+        "file": "ai-stepped-well-plaza.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-stepped-well-plaza.jpg",
         "kind": "plan",
@@ -202,6 +222,11 @@
     ],
     "skating-rink": [
       {
+        "file": "ai-skating-rink.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-skating-rink.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
@@ -215,6 +240,11 @@
       }
     ],
     "pickleball-court": [
+      {
+        "file": "ai-pickleball-court.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-pickleball-court.jpg",
         "kind": "plan",
@@ -236,6 +266,11 @@
       }
     ],
     "kids-play-epdm": [
+      {
+        "file": "ai-kids-play-epdm.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-kids-play-epdm.jpg",
         "kind": "plan",
@@ -265,12 +300,22 @@
     ],
     "multipurpose-court": [
       {
+        "file": "ai-multipurpose-court.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-multipurpose-court.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
       }
     ],
     "pet-park": [
+      {
+        "file": "ai-pet-park.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-pet-park.jpg",
         "kind": "plan",
@@ -286,12 +331,22 @@
     ],
     "stepped-arena": [
       {
+        "file": "ai-stepped-arena.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-stepped-arena.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
       }
     ],
     "outdoor-workstation": [
+      {
+        "file": "ai-outdoor-workstation.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-outdoor-workstation.jpg",
         "kind": "plan",
@@ -321,6 +376,11 @@
     ],
     "yoga-lawn": [
       {
+        "file": "ai-yoga-lawn.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-yoga-lawn.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
@@ -328,12 +388,22 @@
     ],
     "meditation-deck": [
       {
+        "file": "ai-meditation-deck.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
         "file": "plan-meditation-deck.jpg",
         "kind": "plan",
         "credit": "Master plan detail"
       }
     ],
     "celebration-lawn": [
+      {
+        "file": "ai-celebration-lawn.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
       {
         "file": "plan-celebration-lawn.jpg",
         "kind": "plan",
