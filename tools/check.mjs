@@ -20,6 +20,9 @@ if (state) {
   const jpg = await p.locator('#gl').screenshot({ type: 'jpeg', quality: 60, timeout: 150000 }); ok('canvas is non-blank', jpg.length > 40000, 'jpeg bytes=' + jpg.length);
   ok('41 numbered hotspots + 3 tower pins in DOM', state.numbered === 41 && state.pins === 44, `numbered=${state.numbered} pins=${state.pins}`);
   ok('trees planted', state.trees > 100, 'trees=' + state.trees);
+  const fac = await p.evaluate(() => { const w = window.__walk; return { info: w.facades || [], block: !!w.site.facades, floors: Object.fromEntries(w.site.volumes.map(v => [v.id, v.floors])) }; });
+  const finsVols = fac.info.filter(f => f.style === 'fins');
+  ok('facades: every fins-style volume has paired fins, corner piers, one slab ring per floor and a source label', !fac.block || (finsVols.length > 0 && finsVols.every(f => f.fins >= 8 && f.piers >= 3 && f.rings === fac.floors[f.id] && !!f.source)), JSON.stringify(finsVols.map(f => [f.id, f.fins, f.piers, f.rings, !!f.source])));
   const missing = state.imgs.filter(i => !i.file); ok('every hotspot has a postcard', missing.length === 0, missing.length ? 'missing: ' + missing.map(m => m.id).join(',') : `${state.imgs.length} images`);
   const base = new URL(u.searchParams.get('project') || './', u).toString();
   let bad = 0; for (const i of state.imgs) { if (!i.file) continue; const r = await p.request.get(base + 'postcards/' + i.file); const len = +(r.headers()['content-length'] || 0); if (!r.ok() || (len && len < 2000)) { bad++; console.log('   bad image', i.file, r.status(), len); } }
