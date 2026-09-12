@@ -121,6 +121,10 @@ body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif
 
 /* ---- phone: bottom sheet ---- */
 @media (max-width: 760px) {
+  html:not(.fx-blur) .chip, html:not(.fx-blur) .btn, html:not(.fx-blur) #panel, html:not(.fx-blur) #compass, html:not(.fx-blur) #tourbar, html:not(.fx-blur) #intro { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  html:not(.fx-blur) .chip, html:not(.fx-blur) .btn, html:not(.fx-blur) #compass { background: rgba(247,243,236,.97); }
+  html:not(.fx-blur) #panel { background: rgba(247,243,236,.98); }
+  html:not(.fx-blur) #tourbar { background: rgba(29,26,22,.94); }
   #topbar { padding-left: 10px; padding-right: 10px; gap: 8px; }
   .chip { min-width: 0; max-width: 56%; }
   .chip #titleText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

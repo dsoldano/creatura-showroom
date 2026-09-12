@@ -6,6 +6,11 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 // ============ project ============
 const $ = s => document.querySelector(s);
 const q = new URLSearchParams(location.search);
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const LOWQ = q.get('q') === 'low';
+// bisect flags (default = the fixed behaviour): ?fx=alpha (transparent canvas), ?fx=nolog (no log depth), ?fx=stop (stop rendering when idle), ?fx=blur (keep backdrop blur)
+const FX = new Set((q.get('fx') || '').split(',').filter(Boolean));
+if (FX.has('blur')) document.documentElement.classList.add('fx-blur');
 const BASE = (q.get('project') || './').replace(/\/?$/, '/');
 const site = await (await fetch(BASE + 'site.json')).json();
 const mpp = site.scale.metresPerPx;
@@ -21,9 +26,7 @@ const features = site.features || [];
 
 // ============ renderer / scene / camera ============
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-const COARSE = matchMedia('(pointer: coarse)').matches;
-const LOWQ = q.get('q') === 'low';
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: FX.has('alpha'), powerPreference: 'high-performance', logarithmicDepthBuffer: !FX.has('nolog') });
 renderer.setPixelRatio(LOWQ ? 1 : Math.min(devicePixelRatio || 1, COARSE ? 1.35 : 1.5));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -33,17 +36,17 @@ const labelRenderer = new CSS2DRenderer({ element: document.getElementById('labe
 let lastSize = '';
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xece7de, 1100, 2600);
+scene.fog = new THREE.Fog(0xece7de, 900, 2000);
 if (!LOWQ) { const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; pmrem.dispose(); }
 
-const camera = new THREE.PerspectiveCamera(42, 1, 1, 6000);
+const camera = new THREE.PerspectiveCamera(42, 1, 2, 3600);
 const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.enableDamping = true; controls.dampingFactor = COARSE ? 0.1 : 0.06;
 controls.minDistance = 60; controls.maxDistance = 900;
 controls.minPolarAngle = THREE.MathUtils.degToRad(10);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
 controls.screenSpacePanning = false;
-controls.zoomSpeed = 0.8; controls.rotateSpeed = 0.7;
+controls.zoomSpeed = COARSE ? 0.7 : 0.9; controls.rotateSpeed = COARSE ? 0.5 : 0.7; controls.zoomToCursor = !COARSE;
 controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 controls.enabled = false;
 
@@ -54,6 +57,17 @@ function visibleAspect() { const w = canvas.clientWidth, h = canvas.clientHeight
 function fitRadius() { const a = visibleAspect(); return Math.max(siteW, siteD) * 1.75 * Math.max(1, 0.7 / a); }
 function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
   return { ...DEFAULT_VIEW, radius: fitRadius(), theta: THREE.MathUtils.degToRad(portrait ? 12 : 28), phi: THREE.MathUtils.degToRad(portrait ? 47 : 52) }; }
+
+// ============ sky dome ============
+const SKY = { day: { top: new THREE.Color(0xc9dcf0), mid: new THREE.Color(0xe6ecf1), bot: new THREE.Color(0xefebe3) }, dusk: { top: new THREE.Color(0x2b3350), mid: new THREE.Color(0x8c6f8a), bot: new THREE.Color(0xe0a877) } };
+const skyGeo = new THREE.SphereGeometry(3000, 32, 16); const skyCol = new Float32Array(skyGeo.attributes.position.count * 3); skyGeo.setAttribute('color', new THREE.BufferAttribute(skyCol, 3));
+const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false })); sky.renderOrder = -10; scene.add(sky);
+function paintSky(k) {
+  const pos = skyGeo.attributes.position, c = new THREE.Color(), top = new THREE.Color().lerpColors(SKY.day.top, SKY.dusk.top, k), mid = new THREE.Color().lerpColors(SKY.day.mid, SKY.dusk.mid, k), bot = new THREE.Color().lerpColors(SKY.day.bot, SKY.dusk.bot, k);
+  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 3000; if (y >= 0) c.lerpColors(mid, top, Math.pow(y, 0.6)); else c.lerpColors(mid, bot, Math.min(1, -y * 4)); skyCol[i * 3] = c.r; skyCol[i * 3 + 1] = c.g; skyCol[i * 3 + 2] = c.b; }
+  skyGeo.attributes.color.needsUpdate = true;
+}
+paintSky(0);
 
 // ============ lighting (day / dusk) ============
 const hemi = new THREE.HemisphereLight(0xdfe9ff, 0xc2b49a, 1.05); scene.add(hemi);
@@ -76,7 +90,7 @@ function applyLighting(k) {
   scene.fog.color.lerpColors(a.fog, b.fog, k); matBase.color.lerpColors(a.base, b.base, k);
   renderer.toneMappingExposure = THREE.MathUtils.lerp(a.exposure, b.exposure, k); scene.environmentIntensity = THREE.MathUtils.lerp(a.env, b.env, k);
   for (const sh of bandedShaders) sh.uniforms.uDusk.value = k;
-  document.getElementById('sky').style.opacity = k.toFixed(3);
+  paintSky(k); document.getElementById('sky').style.opacity = FX.has('alpha') ? k.toFixed(3) : '0';
 }
 
 // ============ materials ============
@@ -150,9 +164,9 @@ const world = new THREE.Group(); scene.add(world);
 const wellHoles = features.filter(f => f.kind === 'steppedWell').map(f => circlePath(f.circle.cx, f.circle.cy, f.circle.r));
 
 // model table + plinth (with the stepped-well pits cut out)
-const base = new THREE.Mesh(new THREE.CircleGeometry(2400, 96), matBase);
-base.rotation.x = -Math.PI / 2; base.position.y = -1.6; base.receiveShadow = true; world.add(base);
-world.add(extrudeShape(shapeFromPlan(site.boundary, wellHoles), 1.5, matPlinth, null, -1.5));
+const base = new THREE.Mesh(new THREE.CircleGeometry(1700, 96), matBase);
+base.rotation.x = -Math.PI / 2; base.position.y = -1.8; base.receiveShadow = true; world.add(base);
+world.add(extrudeShape(shapeFromPlan(site.boundary, wellHoles), 1.3, matPlinth, null, -1.6));   // top cap at -0.3: never coplanar with the ground
 
 // ground: the plan image clipped to the boundary
 const texLoader = new THREE.TextureLoader();
@@ -163,7 +177,7 @@ groundTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const g = new THREE.ShapeGeometry(shapeFromPlan(site.boundary, wellHoles), 24);
   const c = site.plan.crop, pos = g.attributes.position, uv = new Float32Array(pos.count * 2);
   for (let i = 0; i < pos.count; i++) { const px = pos.getX(i) / mpp + cen[0], py = -pos.getY(i) / mpp + cen[1]; uv[i * 2] = (px - c.x) / c.w; uv[i * 2 + 1] = 1 - (py - c.y) / c.h; }
-  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.rotateX(-Math.PI / 2); g.translate(0, 0.03, 0);
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.rotateX(-Math.PI / 2); g.translate(0, 0, 0);
   const ground = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1, metalness: 0 }));
   ground.receiveShadow = true; world.add(ground);
 }
@@ -341,7 +355,9 @@ function updatePins(now) {
     const el = pinEls.get(h.id), d = camPos.distanceTo(h.world);
     el.style.setProperty('--s', THREE.MathUtils.clamp(1.3 - d / 900, COARSE ? 0.85 : 0.6, 1.15).toFixed(3));
     el.classList.toggle('hidden', d > 1000);
-    if (doRay) { ray.set(camPos, tmpV.copy(h.world).sub(camPos).normalize()); const hit = ray.intersectObjects(occluders, false)[0]; el.classList.toggle('occluded', !!hit && hit.distance < d - 3 && selected !== h.id); }
+    if (doRay) { ray.set(camPos, tmpV.copy(h.world).sub(camPos).normalize()); const hit = ray.intersectObjects(occluders, false)[0]; const occ = !!hit && hit.distance < d - 3 && selected !== h.id;
+      h._occ = occ === h._occWant ? Math.min(3, (h._occ || 0) + 1) : 0; h._occWant = occ;      // three agreeing samples before switching
+      if (h._occ >= 2) el.classList.toggle('occluded', occ); }
   }
 }
 
@@ -388,6 +404,12 @@ $('#btnFly').addEventListener('click', () => { const h = hotspots.find(x => x.id
 const step = dir => { const list = hotspots.filter(h => !activeTheme || h.theme === activeTheme); const i = list.findIndex(h => h.id === selected); select(list[(i + dir + list.length) % list.length].id, true); };
 $('#btnNext').addEventListener('click', () => step(1)); $('#btnPrev').addEventListener('click', () => step(-1));
 canvas.addEventListener('pointerdown', () => { if (isPhone()) panel.classList.add('collapsed'); });
+// double-click / double-tap on the model: fly to that spot
+{ let lastTap = 0, lastX = 0, lastY = 0; const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hitP = new THREE.Vector3(), ndc = new THREE.Vector2();
+  canvas.addEventListener('pointerup', e => { const now = performance.now(), dbl = now - lastTap < 350 && Math.hypot(e.clientX - lastX, e.clientY - lastY) < 24; lastTap = now; lastX = e.clientX; lastY = e.clientY; if (!dbl || tour) return;
+    const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
+    if (ray.ray.intersectPlane(groundPlane, hitP)) { hitP.x = THREE.MathUtils.clamp(hitP.x, bounds.minX - 20, bounds.maxX + 20); hitP.z = THREE.MathUtils.clamp(hitP.z, bounds.minZ - 20, bounds.maxZ + 20); const v = currentView(); flyTo({ radius: Math.min(v.radius, 140), phi: Math.max(v.phi, THREE.MathUtils.degToRad(48)), theta: v.theta, target: new THREE.Vector3(hitP.x, 0, hitP.z) }, 1100); } });
+}
 const hashId = (location.hash.match(/h=([^&]+)/) || [])[1];
 
 // ============ guided tours ============
@@ -455,7 +477,7 @@ function resize() {
   else { camera.aspect = (w + PANEL_W) / h; camera.setViewOffset(w + PANEL_W, h, PANEL_W, 0, w, h); }
   camera.updateProjectionMatrix();
 }
-let lastT = performance.now(), dirty = true, dirtyUntil = performance.now() + 3000;
+let lastT = performance.now(), dirty = true, dirtyUntil = performance.now() + 3000, lastRender = 0;
 controls.addEventListener('change', () => { dirty = true; });
 window.addEventListener('resize', () => { lastSize = ''; dirty = true; });
 renderer.setAnimationLoop(now => {
@@ -464,8 +486,9 @@ renderer.setAnimationLoop(now => {
   if (Math.abs(lightTarget - lightK) > 0.001) { lightK += Math.sign(lightTarget - lightK) * Math.min(Math.abs(lightTarget - lightK), dt / 1.2); applyLighting(lightK); dirty = true; }
   if (controls.enabled && controls.update()) dirty = true;
   const animating = !!tween || (tour && !tour.paused) || ring.visible || now < dirtyUntil;
-  if (!dirty && !animating) return;            // idle: skip the frame (battery)
-  dirty = false;
+  if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < 90) return; }   // idle: ~11 fps keeps the compositor fed without draining the battery
+  dirty = false; lastRender = now;
+  sky.position.set(camera.position.x, 0, camera.position.z);
   updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
 });
 
