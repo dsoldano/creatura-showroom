@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { TIERS, resolveQuality } from './quality.js';
+import { createSky } from './sky.js';
 
 // ============ project ============
 const $ = s => document.querySelector(s);
 const q = new URLSearchParams(location.search);
 const COARSE = matchMedia('(pointer: coarse)').matches;
-const LOWQ = q.get('q') === 'low';
+const QUALITY = resolveQuality(q.get('q'), COARSE), TIER = TIERS[QUALITY];   // high (desktop) / mid (phones) / low (check.mjs) — viewer/quality.js
 // bisect flags (default = the fixed behaviour): ?fx=alpha (transparent canvas), ?fx=nolog (no log depth), ?fx=stop (stop rendering when idle), ?fx=blur (keep backdrop blur)
 const FX = new Set((q.get('fx') || '').split(',').filter(Boolean));
 if (FX.has('blur')) document.documentElement.classList.add('fx-blur');
@@ -26,8 +27,9 @@ const features = site.features || [];
 
 // ============ renderer / scene / camera ============
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: FX.has('alpha'), powerPreference: 'high-performance', logarithmicDepthBuffer: !FX.has('nolog') });
-renderer.setPixelRatio(LOWQ ? 1 : Math.min(devicePixelRatio || 1, COARSE ? 1.35 : 1.5));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: TIER.alpha || FX.has('alpha'), powerPreference: 'high-performance', logarithmicDepthBuffer: TIER.logDepth && !FX.has('nolog') });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, TIER.dpr));
+renderer.info.autoReset = false;   // reset once per rendered frame in the loop so __walk.stats() reports whole frames
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
@@ -37,7 +39,6 @@ let lastSize = '';
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xece7de, 900, 2000);
-if (!LOWQ) { const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; pmrem.dispose(); }
 
 const camera = new THREE.PerspectiveCamera(42, 1, 2, 3600);
 const controls = new OrbitControls(camera, canvas);
@@ -58,39 +59,39 @@ function fitRadius() { const a = visibleAspect(); return Math.max(siteW, siteD) 
 function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
   return { ...DEFAULT_VIEW, radius: fitRadius(), theta: THREE.MathUtils.degToRad(portrait ? 12 : 28), phi: THREE.MathUtils.degToRad(portrait ? 47 : 52) }; }
 
-// ============ sky dome ============
-const SKY = { day: { top: new THREE.Color(0xc9dcf0), mid: new THREE.Color(0xe6ecf1), bot: new THREE.Color(0xefebe3) }, dusk: { top: new THREE.Color(0x2b3350), mid: new THREE.Color(0x8c6f8a), bot: new THREE.Color(0xe0a877) } };
-const skyGeo = new THREE.SphereGeometry(3000, 32, 16); const skyCol = new Float32Array(skyGeo.attributes.position.count * 3); skyGeo.setAttribute('color', new THREE.BufferAttribute(skyCol, 3));
-const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false })); sky.renderOrder = -10; scene.add(sky);
-function paintSky(k) {
-  const pos = skyGeo.attributes.position, c = new THREE.Color(), top = new THREE.Color().lerpColors(SKY.day.top, SKY.dusk.top, k), mid = new THREE.Color().lerpColors(SKY.day.mid, SKY.dusk.mid, k), bot = new THREE.Color().lerpColors(SKY.day.bot, SKY.dusk.bot, k);
-  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 3000; if (y >= 0) c.lerpColors(mid, top, Math.pow(y, 0.6)); else c.lerpColors(mid, bot, Math.min(1, -y * 4)); skyCol[i * 3] = c.r; skyCol[i * 3 + 1] = c.g; skyCol[i * 3 + 2] = c.b; }
-  skyGeo.attributes.color.needsUpdate = true;
-}
-paintSky(0);
+// ============ sky: procedural dome + image-based light ============
+const skyCtl = createSky(renderer, scene, TIER.pmrem);
+const sky = skyCtl.mesh; sky.visible = !FX.has('alpha'); scene.add(sky);   // ?fx=alpha: transparent canvas over the CSS #sky gradient, the pre-fix behaviour
 
 // ============ lighting (day / dusk) ============
 const hemi = new THREE.HemisphereLight(0xdfe9ff, 0xc2b49a, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1dc, 2.0);
-sun.castShadow = true; sun.shadow.mapSize.set(LOWQ || COARSE ? 1024 : 2048, LOWQ || COARSE ? 1024 : 2048);
+sun.castShadow = true; sun.shadow.mapSize.set(TIER.shadowMap, TIER.shadowMap);
 { const sc = sun.shadow.camera, R = Math.max(siteW, siteD) * 0.9; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 50; sc.far = 1400; }
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun); scene.add(sun.target);
 
-const PRESETS = {
-  day:  { hemiSky: new THREE.Color(0xdfe9ff), hemiGround: new THREE.Color(0xc2b49a), hemiI: 1.05, sunColor: new THREE.Color(0xfff1dc), sunI: 2.0, sunPos: new THREE.Vector3(300, 520, 260), fog: new THREE.Color(0xece7de), base: new THREE.Color(0xe9e3d8), exposure: 0.98, env: 0.28, dusk: 0 },
-  dusk: { hemiSky: new THREE.Color(0x6e7fb0), hemiGround: new THREE.Color(0x5b4b3e), hemiI: 0.8, sunColor: new THREE.Color(0xffa565), sunI: 1.7, sunPos: new THREE.Vector3(-360, 240, 220), fog: new THREE.Color(0x8b8796), base: new THREE.Color(0x9599a6), exposure: 0.95, env: 0.2, dusk: 1 },
+const PRESETS = {   // starting values; tuned against source/render-exterior-aerial.webp. sunDir is a unit vector (dusk ≈ 13° elevation so the sky turns orange)
+  day:  { hemiSky: new THREE.Color(0xdfe9ff), hemiGround: new THREE.Color(0xc2b49a), hemiI: 1.05, sunColor: new THREE.Color(0xfff1dc), sunI: 2.4, sunDir: new THREE.Vector3(300, 520, 260).normalize(), shadowI: 0.85,
+          sky: { turbidity: 6, rayleigh: 1.6, mie: 0.008, g: 0.85 }, fog: new THREE.Color(0xece7de), base: new THREE.Color(0xe9e3d8), exposure: 0.7, env: 0.8 },
+  dusk: { hemiSky: new THREE.Color(0x6e7fb0), hemiGround: new THREE.Color(0x5b4b3e), hemiI: 0.8, sunColor: new THREE.Color(0xffa565), sunI: 1.9, sunDir: new THREE.Vector3(-0.8315, 0.2250, 0.5082).normalize(), shadowI: 0.6,
+          sky: { turbidity: 9, rayleigh: 2.4, mie: 0.012, g: 0.9 }, fog: new THREE.Color(0x8b8796), base: new THREE.Color(0x9599a6), exposure: 0.6, env: 0.7 },
 };
 let lightK = q.get('light') === 'dusk' ? 1 : 0, lightTarget = lightK;
 const bandedShaders = [];
-function applyLighting(k) {
-  const a = PRESETS.day, b = PRESETS.dusk;
-  hemi.color.lerpColors(a.hemiSky, b.hemiSky, k); hemi.groundColor.lerpColors(a.hemiGround, b.hemiGround, k); hemi.intensity = THREE.MathUtils.lerp(a.hemiI, b.hemiI, k);
-  sun.color.lerpColors(a.sunColor, b.sunColor, k); sun.intensity = THREE.MathUtils.lerp(a.sunI, b.sunI, k); sun.position.lerpVectors(a.sunPos, b.sunPos, k);
+const sunDirAt = (k, out = new THREE.Vector3()) => out.lerpVectors(PRESETS.day.sunDir, PRESETS.dusk.sunDir, k).normalize();
+function skyParamsAt(k) { const a = PRESETS.day.sky, b = PRESETS.dusk.sky, L = THREE.MathUtils.lerp; return { turbidity: L(a.turbidity, b.turbidity, k), rayleigh: L(a.rayleigh, b.rayleigh, k), mie: L(a.mie, b.mie, k), g: L(a.g, b.g, k) }; }
+const lerpSky = k => skyCtl.setParams(skyParamsAt(k), sunDirAt(k));
+function applyLighting(k, force = false) {   // the single day/dusk choke point: lights, sun, shadow, fog, exposure, sky uniforms, environment map, tower glow
+  const a = PRESETS.day, b = PRESETS.dusk, L = THREE.MathUtils.lerp;
+  hemi.color.lerpColors(a.hemiSky, b.hemiSky, k); hemi.groundColor.lerpColors(a.hemiGround, b.hemiGround, k); hemi.intensity = L(a.hemiI, b.hemiI, k) * TIER.hemiScale;
+  sun.color.lerpColors(a.sunColor, b.sunColor, k); sun.intensity = L(a.sunI, b.sunI, k); sun.position.copy(sunDirAt(k)).multiplyScalar(700); sun.shadow.intensity = L(a.shadowI, b.shadowI, k);
   scene.fog.color.lerpColors(a.fog, b.fog, k); matBase.color.lerpColors(a.base, b.base, k);
-  renderer.toneMappingExposure = THREE.MathUtils.lerp(a.exposure, b.exposure, k); scene.environmentIntensity = THREE.MathUtils.lerp(a.env, b.env, k);
+  renderer.toneMappingExposure = L(a.exposure, b.exposure, k);
+  lerpSky(k);
+  scene.environment = skyCtl.environment(k, lerpSky, force); scene.environmentIntensity = L(a.env, b.env, k) * skyCtl.intensityScale(k);
   for (const sh of bandedShaders) sh.uniforms.uDusk.value = k;
-  paintSky(k); document.getElementById('sky').style.opacity = FX.has('alpha') ? k.toFixed(3) : '0';
+  document.getElementById('sky').style.opacity = FX.has('alpha') ? k.toFixed(3) : '0';
 }
 
 // ============ materials ============
@@ -166,7 +167,8 @@ const wellHoles = features.filter(f => f.kind === 'steppedWell').map(f => circle
 // model table + plinth (with the stepped-well pits cut out)
 const base = new THREE.Mesh(new THREE.CircleGeometry(1700, 96), matBase);
 base.rotation.x = -Math.PI / 2; base.position.y = -1.8; base.receiveShadow = true; world.add(base);
-world.add(extrudeShape(shapeFromPlan(site.boundary, wellHoles), 1.3, matPlinth, null, -1.6));   // top cap at -0.3: never coplanar with the ground
+const PLINTH_TOP = -0.3, PLINTH_H = 1.3;   // cap below the ground plane at 0: never coplanar (mobile-flicker fix); asserted by check.mjs via __walk.plinthTopY
+world.add(extrudeShape(shapeFromPlan(site.boundary, wellHoles), PLINTH_H, matPlinth, null, PLINTH_TOP - PLINTH_H));
 
 // ground: the plan image clipped to the boundary
 const texLoader = new THREE.TextureLoader();
@@ -488,8 +490,10 @@ renderer.setAnimationLoop(now => {
   const animating = !!tween || (tour && !tour.paused) || ring.visible || now < dirtyUntil;
   if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < 90) return; }   // idle: ~11 fps keeps the compositor fed without draining the battery
   dirty = false; lastRender = now;
-  sky.position.set(camera.position.x, 0, camera.position.z);
+  renderer.info.reset();
   updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
 });
 
-window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; } };
+window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
+  quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP,
+  stats: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length, textures: renderer.info.memory.textures }) };
