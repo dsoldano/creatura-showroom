@@ -3,7 +3,7 @@
   "name": "Brigade Belvedere",
   "developer": "Brigade Group",
   "location": "Budigere Cross, East Bengaluru",
-  "disclaimer": "Rebuilt from public data by CreatiSoul as a demonstration. Not an official Brigade Group product. Ground is the published master plan; towers are massing, not the architect's facade; Phase 2 blocks are read off the plan.",
+  "disclaimer": "Rebuilt from public data by CreatiSoul as a demonstration. Not an official Brigade Group product. Ground is the published master plan; towers are massing with a facade rhythm read from the developer's published render, not the architect's drawings; Phase 2 blocks are read off the plan.",
   "facts": [
     {
       "label": "Site",
@@ -160,6 +160,11 @@
       ]
     }
   ],
+  "facades": {
+    "tower": { "style": "fins", "bayM": 3.7, "finW": 0.4, "finGap": 0.5, "recess": 0.5, "slabH": 0.45, "crownH": 4.5, "baseH": 6.7, "fin": "#f2ece0", "band": "#e6ddcd", "glass": "#46596a", "source": "rhythm read from the developer's published aerial render, not from the architect's drawings" },
+    "clubhouse": { "style": "stoneGlass", "bayM": 6, "finW": 0.8, "finGap": 0.2, "recess": 0.35, "slabH": 0.5, "crownH": 0.6, "glass": "#5a6b78", "fin": "#d9c9a8", "band": "#d9c9a8" },
+    "future": { "style": "ghost", "rhythm": "faint" }
+  },
   "features": [
     {
       "id": "pickleball",

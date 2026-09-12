@@ -3,8 +3,8 @@ export const FACADE_DEFAULTS = {          // no `facades` block in site.json →
   tower: { style: 'banded' }, clubhouse: { style: 'banded' }, future: { style: 'ghost', rhythm: 'none' }, services: { style: 'plain' },
 };
 export const STYLE_PRESETS = {            // rhythm read from Brigade's published aerial render: paired fins, ~3.7 m bays, upstand bands, stepped crown
-  fins:       { fins: true,  bayM: 3.7, finW: 0.4, finGap: 0.5, recess: 0.5, slabH: 0.45, crownH: 4.5, fin: '#f2ece0', band: '#e6ddcd', glass: '#1f2b33' },
-  stoneGlass: { fins: false, bayM: 6,   finW: 0,   finGap: 0,   recess: 0.3, slabH: 0.6,  crownH: 0,   fin: '#d9c9a8', band: '#d9c9a8', glass: '#2a3a44' },
+  fins:       { fins: true,  bayM: 3.7, finW: 0.4, finGap: 0.5, recess: 0.5, slabH: 0.45, crownH: 4.5, fin: '#f2ece0', band: '#e6ddcd', glass: '#46596a' },
+  stoneGlass: { fins: true,  bayM: 6,   finW: 0.8, finGap: 0.2, recess: 0.35, slabH: 0.5, crownH: 0.6, fin: '#d9c9a8', band: '#d9c9a8', glass: '#5a6b78' },   // low block: broad stone pier pair per bay, tall glass between
 };
 export function resolveFacade(volume, siteFacades = {}) {
   const raw = typeof volume.facade === 'string' ? { style: volume.facade }

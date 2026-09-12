@@ -16,3 +16,5 @@ used here for a CreatiSoul demonstration rebuilt from public data.
 Facts (public): 10.75 acres; 5 towers 3B+S+G+43; 1,750 homes; Phase 1 = towers A+B,
 773 units; RERA PRM/KA/RERA/1251/446/PR/240326/008549; architect Ricardo Bofill
 Taller de Arquitectura; possession March 2031.
+
+Facade rhythm (2026-09-12, arc 2 B2): paired vertical fins, ~3.7 m bays, per-floor upstand bands and a stepped crown were read by eye from brigade-belvedere-exterior-aerial.webp; no architect's drawings were used; tower counts and heights are unchanged. The viewer labels this in site.json `facades.tower.source` and the disclaimer.

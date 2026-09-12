@@ -16,7 +16,7 @@ test('resolveFacade: site block + presets + per-volume override', () => {
   const t = resolveFacade({ kind: 'tower' }, site);
   assert.equal(t.style, 'fins'); assert.equal(t.fins, true); assert.equal(t.bayM, 3.7); assert.equal(t.finW, 0.4); assert.equal(t.recess, 0.5); assert.equal(t.source, 'read from the render');
   assert.equal(resolveFacade({ kind: 'future' }, site).rhythm, 'faint');
-  assert.equal(resolveFacade({ kind: 'tower', facade: 'stoneGlass' }, site).fins, false);
+  assert.equal(resolveFacade({ kind: 'tower', facade: 'stoneGlass' }, site).finW, 0.8);
   assert.equal(resolveFacade({ kind: 'tower', facade: { style: 'fins', bayM: 5 } }, site).bayM, 5);
 });
 test('edgeFrames: outward normals for either winding', () => {

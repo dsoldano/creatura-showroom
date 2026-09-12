@@ -17,18 +17,18 @@ export function facadeMaterial(cfg, opts) {
         float side = 1.0 - abs(vWn.y);
         float fl = fract((vWp.y - uBaseH) / uFloorH);            // 0 at a slab top, 1 just under the next slab
         float slabK = uSlabH / uFloorH;
-        float upstand = 1.0 - smoothstep(0.10, 0.13, fl);          // light balcony upstand just above each slab
+        float upstand = 1.0 - smoothstep(0.20, 0.23, fl);          // light balcony upstand / spandrel: the lower fifth of each floor, so the fins lead
         float podium = 1.0 - step(uBaseH, vWp.y);                  // stilt + ground zone: band colour, no glass
         float glazing = side * (1.0 - upstand) * (1.0 - podium) * step(fl, 1.0 - slabK);
         float ledge = smoothstep(0.78, 1.0 - slabK, fl);            // darkening under the slab overhang
-        diffuseColor.rgb = mix(diffuseColor.rgb, uGlass * (1.0 - 0.45 * ledge), glazing);
+        diffuseColor.rgb = mix(diffuseColor.rgb, uGlass * (1.0 - 0.3 * ledge), glazing);
         fcdGlazing = glazing; fcdFl = fl; fcdU = dot(vWp.xz, vec2(-vWn.z, vWn.x));`)
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.16, fcdGlazing);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.55, fcdGlazing);')
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         float fi = floor((vWp.y - uBaseH) / uFloorH); float bay = floor(fcdU / uBayM);
         float h = fract(sin(dot(vec2(fi, bay), vec2(12.9898, 78.233))) * 43758.5453);
-        float win = step(0.45, h) * step(0.18, fcdFl) * (1.0 - step(0.72, fcdFl));
+        float win = step(0.45, h) * step(0.36, fcdFl) * (1.0 - step(0.80, fcdFl));
         totalEmissiveRadiance += vec3(1.0, 0.72, 0.42) * 1.1 * uDusk * fcdGlazing * win * uWin;`);
     opts.bandedShaders.push(sh);
   };

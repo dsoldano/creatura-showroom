@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { TIERS, resolveQuality } from './quality.js';
 import { createSky } from './sky.js';
+import { resolveFacade, facadeMaterial, ghostMaterial, buildFacade } from './facade.js';
 
 // ============ project ============
 const $ = s => document.querySelector(s);
@@ -185,14 +186,27 @@ groundTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 }
 
 // volumes
-const volumeMeshes = {};
+// facades: site.facades[kind] (or volume.facade) → fins/stoneGlass build geometry + glazing shader; banded/ghost/plain are today's looks (viewer/facade.js)
+const facadeMats = new Map(), ghostMats = new Map();
+function facadeMatsFor(cfg, floorH, baseH, windows) {
+  const key = JSON.stringify([cfg, floorH, baseH, windows]);
+  if (!facadeMats.has(key)) facadeMats.set(key, { core: facadeMaterial(cfg, { floorH, baseH, windows, bandedShaders, lightK }), fin: new THREE.MeshStandardMaterial({ color: new THREE.Color(cfg.fin), roughness: 0.85 }), band: new THREE.MeshStandardMaterial({ color: new THREE.Color(cfg.band), roughness: 0.85 }) });
+  return facadeMats.get(key);
+}
+const volumeMeshes = {}, facadeInfo = [];
 for (const v of site.volumes) {
-  const h = v.heightM || (v.floors || 1) * FLOOR_H; let mesh;
-  if (v.kind === 'tower') mesh = extrude(v.polygon, h, matTower, matEdge);
-  else if (v.kind === 'future') { mesh = extrude(v.polygon, h, matGhost, matGhostEdge); mesh.castShadow = false; }
+  const h = v.heightM || (v.floors || 1) * FLOOR_H, cfg = resolveFacade(v, site.facades); let mesh;
+  if (cfg.style === 'fins' || cfg.style === 'stoneGlass') {
+    const floorH = v.kind === 'tower' ? FLOOR_H : h / (v.floors || 1), baseH = cfg.baseH ?? Math.max(0, h - (v.floors || 1) * floorH);
+    const built = buildFacade(v, cfg, { toX, toZ, h, floorH, baseH, tier: TIER, mats: facadeMatsFor(cfg, floorH, baseH, v.kind === 'tower') });
+    mesh = built.core; world.add(built.group); facadeInfo.push({ id: v.id, style: cfg.style, fins: built.fins, piers: built.piers, rings: built.rings, source: cfg.source || '' });
+  }
+  else if (v.kind === 'tower') mesh = extrude(v.polygon, h, matTower, matEdge);
+  else if (v.kind === 'future') { const key = cfg.rhythm || 'none'; if (!ghostMats.has(key)) ghostMats.set(key, ghostMaterial(matGhost, cfg));
+    mesh = extrude(v.polygon, h, ghostMats.get(key), matGhostEdge); mesh.castShadow = false; facadeInfo.push({ id: v.id, style: 'ghost', rhythm: key }); }
   else if (v.kind === 'clubhouse') mesh = extrude(v.polygon, h, matClub, matEdge);
   else mesh = extrude(v.polygon, h, matServices, matEdge);
-  mesh.userData.volume = v; volumeMeshes[v.id] = mesh; world.add(mesh);
+  mesh.userData.volume = v; volumeMeshes[v.id] = mesh; if (!mesh.parent) world.add(mesh);
 }
 
 // ---- features: the "earned" 3D detail ----
@@ -495,5 +509,5 @@ renderer.setAnimationLoop(now => {
 });
 
 window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
-  quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP,
+  quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP, facades: facadeInfo,
   stats: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length, textures: renderer.info.memory.textures }) };
