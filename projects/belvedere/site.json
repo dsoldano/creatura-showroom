@@ -1,0 +1,667 @@
+{
+  "slug": "belvedere",
+  "name": "Brigade Belvedere",
+  "developer": "Brigade Group",
+  "location": "Budigere Cross, East Bengaluru",
+  "disclaimer": "Rebuilt from public data by CreatiSoul as a demonstration. Not an official Brigade Group product. Ground is the published master plan; towers are massing, not the architect's facade; Phase 2 blocks are read off the plan.",
+  "facts": [
+    {
+      "label": "Site",
+      "value": "10.75 acres"
+    },
+    {
+      "label": "Towers",
+      "value": "5 × 3B+S+G+43"
+    },
+    {
+      "label": "Homes",
+      "value": "1,750"
+    },
+    {
+      "label": "Phase 1",
+      "value": "Towers A & B, 773 homes"
+    },
+    {
+      "label": "RERA",
+      "value": "PRM/KA/RERA/1251/446/PR/240326/008549"
+    }
+  ],
+  "plan": {
+    "image": "source/masterplan.webp",
+    "width": 1200,
+    "height": 848,
+    "crop": {
+      "x": 40,
+      "y": 20,
+      "w": 620,
+      "h": 828
+    },
+    "northDeg": null,
+    "note": "All coordinates are pixels in the 1200×848 source image. crop is the region draped as ground."
+  },
+  "scale": {
+    "acres": 10.75,
+    "metresPerPx": 0.343,
+    "derivedFrom": "boundary polygon area vs acres (shoelace)",
+    "floorHeightM": 3.1,
+    "aboveGroundLevels": 45
+  },
+  "boundary": [
+    [80,38],
+    [628,48],
+    [497,835],
+    [112,835]
+  ],
+  "volumes": [
+    {
+      "id": "tower-a",
+      "kind": "tower",
+      "name": "Tower A",
+      "floors": 43,
+      "heightM": 140,
+      "polygon": [
+        [145,93],
+        [232,93],
+        [232,240],
+        [145,240]
+      ]
+    },
+    {
+      "id": "tower-b",
+      "kind": "tower",
+      "name": "Tower B",
+      "floors": 43,
+      "heightM": 140,
+      "polygon": [
+        [403,103],
+        [501,103],
+        [501,258],
+        [403,258]
+      ]
+    },
+    {
+      "id": "future-1",
+      "kind": "future",
+      "name": "Future tower (Phase 2)",
+      "floors": 43,
+      "heightM": 140,
+      "polygon": [
+        [270,219],
+        [350,219],
+        [350,353],
+        [270,353]
+      ]
+    },
+    {
+      "id": "future-2",
+      "kind": "future",
+      "name": "Future tower (Phase 2)",
+      "floors": 43,
+      "heightM": 140,
+      "polygon": [
+        [365,382],
+        [462,382],
+        [462,540],
+        [365,540]
+      ]
+    },
+    {
+      "id": "future-3",
+      "kind": "future",
+      "name": "Future tower (Phase 2)",
+      "floors": 43,
+      "heightM": 140,
+      "polygon": [
+        [167,526],
+        [275,526],
+        [275,687],
+        [167,687]
+      ]
+    },
+    {
+      "id": "clubhouse",
+      "kind": "clubhouse",
+      "name": "Clubhouse (future development)",
+      "floors": 3,
+      "heightM": 12,
+      "polygon": [
+        [412,595],
+        [508,589],
+        [503,694],
+        [412,694]
+      ]
+    },
+    {
+      "id": "services-n",
+      "kind": "services",
+      "name": "Services",
+      "floors": 1,
+      "heightM": 4,
+      "polygon": [
+        [95,45],
+        [200,45],
+        [200,68],
+        [95,68]
+      ]
+    },
+    {
+      "id": "services-s",
+      "kind": "services",
+      "name": "Services",
+      "floors": 1,
+      "heightM": 4,
+      "polygon": [
+        [122,722],
+        [228,722],
+        [228,752],
+        [122,752]
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "pickleball",
+      "kind": "court",
+      "sport": "pickleball",
+      "rect": [
+        150,
+        266,
+        197,
+        320
+      ]
+    },
+    {
+      "id": "multipurpose",
+      "kind": "court",
+      "sport": "basketball",
+      "rect": [
+        370,
+        295,
+        460,
+        348
+      ]
+    },
+    {
+      "id": "tennis",
+      "kind": "court",
+      "sport": "tennis",
+      "rect": [
+        166,
+        445,
+        270,
+        497
+      ]
+    },
+    {
+      "id": "rink",
+      "kind": "rink",
+      "ellipse": {
+        "cx": 196,
+        "cy": 349,
+        "rx": 37,
+        "ry": 21
+      }
+    },
+    {
+      "id": "stepped-well",
+      "kind": "steppedWell",
+      "circle": {
+        "cx": 229,
+        "cy": 407,
+        "r": 31
+      },
+      "waterR": 9
+    },
+    {
+      "id": "splash",
+      "kind": "splash",
+      "circle": {
+        "cx": 323,
+        "cy": 138,
+        "r": 19
+      }
+    },
+    {
+      "id": "plaza-1",
+      "kind": "plazaDisc",
+      "circle": {
+        "cx": 327,
+        "cy": 389,
+        "r": 17
+      }
+    },
+    {
+      "id": "plaza-2",
+      "kind": "plazaDisc",
+      "circle": {
+        "cx": 327,
+        "cy": 439,
+        "r": 17
+      }
+    },
+    {
+      "id": "plaza-3",
+      "kind": "plazaDisc",
+      "circle": {
+        "cx": 316,
+        "cy": 482,
+        "r": 17
+      }
+    },
+    {
+      "id": "portal",
+      "kind": "portal",
+      "rect": [
+        252,
+        707,
+        385,
+        732
+      ]
+    },
+    {
+      "id": "dome-1",
+      "kind": "dome",
+      "circle": {
+        "cx": 585,
+        "cy": 90,
+        "r": 11
+      }
+    },
+    {
+      "id": "dome-2",
+      "kind": "dome",
+      "circle": {
+        "cx": 600,
+        "cy": 116,
+        "r": 9
+      }
+    },
+    {
+      "id": "ramp-n",
+      "kind": "ramp",
+      "rect": [
+        280,
+        60,
+        385,
+        85
+      ]
+    },
+    {
+      "id": "ramp-s",
+      "kind": "ramp",
+      "rect": [
+        302,
+        545,
+        333,
+        653
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "id": "arrival",
+      "name": "Arrival"
+    },
+    {
+      "id": "sports",
+      "name": "Sports"
+    },
+    {
+      "id": "play",
+      "name": "Water & play"
+    },
+    {
+      "id": "gardens",
+      "name": "Gardens & quiet"
+    },
+    {
+      "id": "social",
+      "name": "Social"
+    },
+    {
+      "id": "towers",
+      "name": "Towers"
+    }
+  ],
+  "hotspots": [
+    {
+      "n": 1,
+      "id": "entrance-portal",
+      "name": "Entrance portal",
+      "theme": "arrival",
+      "pos": [313,720]
+    },
+    {
+      "n": 2,
+      "id": "arrival-plaza",
+      "name": "Arrival plaza",
+      "theme": "arrival",
+      "pos": [310,678]
+    },
+    {
+      "n": 3,
+      "id": "basement-ramp",
+      "name": "Basement ramp",
+      "theme": "arrival",
+      "pos": [316,633],
+      "also": [
+        [322,72]
+      ]
+    },
+    {
+      "n": 4,
+      "id": "tower-drop-off",
+      "name": "Tower drop-off",
+      "theme": "arrival",
+      "pos": [132,168],
+      "also": [
+        [231,132],
+        [513,190],
+        [355,300],
+        [458,455],
+        [154,612]
+      ]
+    },
+    {
+      "n": 5,
+      "id": "arrival-boulevard",
+      "name": "Arrival boulevard",
+      "theme": "arrival",
+      "pos": [298,564]
+    },
+    {
+      "n": 6,
+      "id": "clubhouse-drop-off",
+      "name": "Clubhouse drop-off",
+      "theme": "arrival",
+      "pos": [394,641]
+    },
+    {
+      "n": 7,
+      "id": "jogging-loop",
+      "name": "Jogging loop",
+      "theme": "sports",
+      "pos": [375,235],
+      "also": [
+        [317,505]
+      ]
+    },
+    {
+      "n": 8,
+      "id": "event-plaza",
+      "name": "Event plaza",
+      "theme": "social",
+      "pos": [322,450]
+    },
+    {
+      "n": 9,
+      "id": "event-kiosk",
+      "name": "Temporary event kiosk",
+      "theme": "social",
+      "pos": [315,420]
+    },
+    {
+      "n": 10,
+      "id": "tennis-court",
+      "name": "Tennis court",
+      "theme": "sports",
+      "pos": [237,464]
+    },
+    {
+      "n": 11,
+      "id": "stepped-well-plaza",
+      "name": "Stepped well plaza",
+      "theme": "play",
+      "pos": [231,407]
+    },
+    {
+      "n": 12,
+      "id": "kids-play-area",
+      "name": "Kids' play area",
+      "theme": "play",
+      "pos": [183,422]
+    },
+    {
+      "n": 13,
+      "id": "floral-garden",
+      "name": "Floral garden",
+      "theme": "gardens",
+      "pos": [166,430]
+    },
+    {
+      "n": 14,
+      "id": "garden-pavilion",
+      "name": "Garden pavilion",
+      "theme": "gardens",
+      "pos": [166,380],
+      "also": [
+        [264,124]
+      ]
+    },
+    {
+      "n": 15,
+      "id": "skating-rink",
+      "name": "Skating rink",
+      "theme": "sports",
+      "pos": [206,349]
+    },
+    {
+      "n": 16,
+      "id": "surface-parking",
+      "name": "Surface parking",
+      "theme": "arrival",
+      "pos": [108,360],
+      "also": [
+        [243,55],
+        [509,335],
+        [543,520]
+      ]
+    },
+    {
+      "n": 17,
+      "id": "pickleball-court",
+      "name": "Pickleball court",
+      "theme": "sports",
+      "pos": [169,302]
+    },
+    {
+      "n": 18,
+      "id": "tree-court",
+      "name": "Tree court",
+      "theme": "gardens",
+      "pos": [217,282]
+    },
+    {
+      "n": 19,
+      "id": "sculpture-court",
+      "name": "Sculpture court",
+      "theme": "gardens",
+      "pos": [281,173]
+    },
+    {
+      "n": 20,
+      "id": "toddlers-sand-pit",
+      "name": "Toddlers' sand pit",
+      "theme": "play",
+      "pos": [278,136]
+    },
+    {
+      "n": 21,
+      "id": "kids-play-epdm",
+      "name": "Kids' play area on EPDM",
+      "theme": "play",
+      "pos": [320,141]
+    },
+    {
+      "n": 22,
+      "id": "lawn-mound",
+      "name": "Lawn mound",
+      "theme": "gardens",
+      "pos": [312,107]
+    },
+    {
+      "n": 23,
+      "id": "outdoor-reading",
+      "name": "Outdoor reading",
+      "theme": "gardens",
+      "pos": [351,117]
+    },
+    {
+      "n": 24,
+      "id": "outdoor-gym",
+      "name": "Outdoor gym",
+      "theme": "sports",
+      "pos": [335,173]
+    },
+    {
+      "n": 25,
+      "id": "multipurpose-court",
+      "name": "Multipurpose court",
+      "theme": "sports",
+      "pos": [419,311]
+    },
+    {
+      "n": 26,
+      "id": "pet-park",
+      "name": "Pet park",
+      "theme": "gardens",
+      "pos": [513,517]
+    },
+    {
+      "n": 27,
+      "id": "butterfly-garden",
+      "name": "Butterfly garden",
+      "theme": "gardens",
+      "pos": [536,533]
+    },
+    {
+      "n": 28,
+      "id": "stepped-arena",
+      "name": "Stepped arena",
+      "theme": "social",
+      "pos": [515,425]
+    },
+    {
+      "n": 29,
+      "id": "outdoor-workstation",
+      "name": "Outdoor workstation",
+      "theme": "social",
+      "pos": [544,327]
+    },
+    {
+      "n": 30,
+      "id": "staircase",
+      "name": "Staircase",
+      "theme": "social",
+      "pos": [538,272]
+    },
+    {
+      "n": 31,
+      "id": "nature-play",
+      "name": "Nature play",
+      "theme": "play",
+      "pos": [560,243]
+    },
+    {
+      "n": 32,
+      "id": "outdoor-picnic",
+      "name": "Outdoor picnic",
+      "theme": "gardens",
+      "pos": [583,203]
+    },
+    {
+      "n": 33,
+      "id": "yoga-lawn",
+      "name": "Yoga lawn",
+      "theme": "gardens",
+      "pos": [569,152]
+    },
+    {
+      "n": 34,
+      "id": "meditation-deck",
+      "name": "Meditation deck",
+      "theme": "gardens",
+      "pos": [580,88]
+    },
+    {
+      "n": 35,
+      "id": "celebration-lawn",
+      "name": "Celebration lawn",
+      "theme": "social",
+      "pos": [394,605]
+    },
+    {
+      "n": 36,
+      "id": "deck-seating",
+      "name": "Deck seating",
+      "theme": "social",
+      "pos": [394,577],
+      "also": [
+        [513,550]
+      ]
+    },
+    {
+      "n": 37,
+      "id": "promenade-stair-plaza",
+      "name": "Promenade stair plaza",
+      "theme": "social",
+      "pos": [478,574]
+    },
+    {
+      "n": 38,
+      "id": "toddlers-play-area",
+      "name": "Toddlers' play area",
+      "theme": "play",
+      "pos": [518,605]
+    },
+    {
+      "n": 39,
+      "id": "viewing-deck",
+      "name": "Viewing deck",
+      "theme": "social",
+      "pos": [525,575]
+    },
+    {
+      "n": 40,
+      "id": "deck-seating-2",
+      "name": "Deck seating",
+      "theme": "social",
+      "pos": [524,551]
+    },
+    {
+      "n": 41,
+      "id": "services",
+      "name": "Services",
+      "theme": "arrival",
+      "pos": [123,40],
+      "also": [
+        [160,732]
+      ]
+    },
+    {
+      "n": "A",
+      "id": "tower-a-info",
+      "name": "Tower A",
+      "theme": "towers",
+      "pos": [188,166],
+      "volume": "tower-a"
+    },
+    {
+      "n": "B",
+      "id": "tower-b-info",
+      "name": "Tower B",
+      "theme": "towers",
+      "pos": [452,180],
+      "volume": "tower-b"
+    },
+    {
+      "n": "C",
+      "id": "clubhouse-info",
+      "name": "Clubhouse",
+      "theme": "towers",
+      "pos": [452,650],
+      "volume": "clubhouse"
+    }
+  ],
+  "tours": []
+}
