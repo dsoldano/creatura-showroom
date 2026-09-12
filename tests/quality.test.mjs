@@ -21,7 +21,9 @@ test('phone and check tiers keep the flicker contract; low has no environment ma
     assert.ok(['live', 'cached', 'none'].includes(t.pmrem), name + '.pmrem');
     assert.equal(typeof t.shadowMap, 'number', name + '.shadowMap');
     assert.equal(typeof t.hemiScale, 'number', name + '.hemiScale');
+    assert.equal(typeof t.facadeShadows, 'boolean', name + '.facadeShadows');
   }
+  assert.equal(TIERS.mid.facadeShadows, false); assert.equal(TIERS.high.facadeShadows, true);
   assert.equal(TIERS.mid.logDepth, true); assert.equal(TIERS.mid.alpha, false);
   assert.equal(TIERS.low.logDepth, true); assert.equal(TIERS.low.alpha, false);
   assert.equal(TIERS.low.pmrem, 'none');
