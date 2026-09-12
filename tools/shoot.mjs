@@ -16,7 +16,7 @@ for (const [name, vp] of Object.entries(sizes)) {
   await p.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
   await p.waitForTimeout(wait);
   const out = `${prefix}-${name}.png`;
-  await p.screenshot({ path: out });
+  await p.screenshot({ path: out, timeout: 150000 });   // software GL: 25–55 s per shot, more under load
   const stats = await p.evaluate(() => {
     const w = window.__walk; if (!w) return null;
     const info = w.renderer.info; const c = document.getElementById('gl');

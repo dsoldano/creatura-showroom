@@ -71,11 +71,11 @@ sun.castShadow = true; sun.shadow.mapSize.set(TIER.shadowMap, TIER.shadowMap);
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun); scene.add(sun.target);
 
-const PRESETS = {   // starting values; tuned against source/render-exterior-aerial.webp. sunDir is a unit vector (dusk ≈ 13° elevation so the sky turns orange)
-  day:  { hemiSky: new THREE.Color(0xdfe9ff), hemiGround: new THREE.Color(0xc2b49a), hemiI: 1.05, sunColor: new THREE.Color(0xfff1dc), sunI: 2.4, sunDir: new THREE.Vector3(300, 520, 260).normalize(), shadowI: 0.85,
-          sky: { turbidity: 6, rayleigh: 1.6, mie: 0.008, g: 0.85 }, fog: new THREE.Color(0xece7de), base: new THREE.Color(0xe9e3d8), exposure: 0.7, env: 0.8 },
-  dusk: { hemiSky: new THREE.Color(0x6e7fb0), hemiGround: new THREE.Color(0x5b4b3e), hemiI: 0.8, sunColor: new THREE.Color(0xffa565), sunI: 1.9, sunDir: new THREE.Vector3(-0.8315, 0.2250, 0.5082).normalize(), shadowI: 0.6,
-          sky: { turbidity: 9, rayleigh: 2.4, mie: 0.012, g: 0.9 }, fog: new THREE.Color(0x8b8796), base: new THREE.Color(0x9599a6), exposure: 0.6, env: 0.7 },
+const PRESETS = {   // tuned against source/render-exterior-aerial.webp (round 4). sunDir is a unit vector (dusk ≈ 13° elevation so the sky turns orange)
+  day:  { hemiSky: new THREE.Color(0xdfe9ff), hemiGround: new THREE.Color(0xc2b49a), hemiI: 0.7, sunColor: new THREE.Color(0xffeccf), sunI: 3.2, sunDir: new THREE.Vector3(300, 520, 260).normalize(), shadowI: 0.9,
+          sky: { turbidity: 6, rayleigh: 1.6, mie: 0.008, g: 0.85 }, fog: new THREE.Color(0xece7de), base: new THREE.Color(0xe9e3d8), exposure: 0.68, env: 0.38 },
+  dusk: { hemiSky: new THREE.Color(0x8c8ec0), hemiGround: new THREE.Color(0x7a5a48), hemiI: 1.0, sunColor: new THREE.Color(0xffb070), sunI: 2.0, sunDir: new THREE.Vector3(-0.8315, 0.2250, 0.5082).normalize(), shadowI: 0.6,
+          sky: { turbidity: 8, rayleigh: 2.0, mie: 0.012, g: 0.9 }, fog: new THREE.Color(0xa79aa4), base: new THREE.Color(0xa39ba6), exposure: 0.72, env: 0.7 },
 };
 let lightK = q.get('light') === 'dusk' ? 1 : 0, lightTarget = lightK;
 const bandedShaders = [];
