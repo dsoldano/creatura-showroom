@@ -100,12 +100,30 @@ body { font: 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif
 .detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .detail-head .num { flex: 0 0 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; font: 700 13px/34px system-ui; text-align: center; }
 .detail-head h2 { font-size: 20px; line-height: 1.15; margin: 0; letter-spacing: -.01em; }
-.postcard { margin: 0 0 10px; }
-.postcard img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 12px; display: block; background: var(--paper-2); }
+.postcard { margin: 0 0 10px; position: relative; }
+.postcard .strip { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; border-radius: 12px; background: var(--paper-2); -webkit-overflow-scrolling: touch; }
+.postcard .strip::-webkit-scrollbar { display: none; }
+.postcard .slide { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.postcard .media { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; display: block; background: var(--paper-2); }
+.postcard .strip.wide .media { aspect-ratio: 16 / 9; }
+.postcard .poster { position: relative; }
+.postcard .poster img { width: 100%; aspect-ratio: inherit; object-fit: cover; display: block; }
+.postcard .poster .play { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(29,26,22,.7); }
+.postcard .poster .play::after { content: ""; position: absolute; left: 18px; top: 13px; border-style: solid; border-width: 9px 0 9px 14px; border-color: transparent transparent transparent #fff; }
+.postcard .dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.postcard .dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: rgba(29,26,22,.22); cursor: pointer; }
+.postcard .dot[aria-current="true"] { background: var(--accent); }
+.postcard .arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(247,243,236,.9); color: var(--ink); font: 700 18px/32px system-ui; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.postcard .arrow.prev { left: 8px; } .postcard .arrow.next { right: 8px; }
+.postcard .arrow[disabled] { visibility: hidden; }
+@media (hover: hover) { .postcard:hover .arrow:not([disabled]) { opacity: 1; } }
+.postcard.single .dots, .postcard.single .arrow { display: none; }
 .postcard figcaption { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
 .badge { display: inline-block; white-space: nowrap; font: 700 10px/1 system-ui; letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: var(--paper-2); color: var(--ink); border: 1px solid var(--line); }
 .badge.ai { background: #fff2e4; border-color: #f0c9a3; color: #8a4c12; }
 .badge.developer { background: #e8f0e6; border-color: #b9d1b4; color: #2f5a2a; }
+.badge.video, .badge.embed { background: #e8f0e6; border-color: #b9d1b4; color: #2f5a2a; }
+.badge.ai-video { background: #fff2e4; border-color: #f0c9a3; color: #8a4c12; }
 .caption { margin: 0 0 12px; font-size: 14px; line-height: 1.5; }
 .detail-actions { display: flex; gap: 8px; }
 .detail-actions .btn { padding: 8px 12px; font-size: 13px; }
