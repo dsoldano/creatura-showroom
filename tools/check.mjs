@@ -12,7 +12,7 @@ const state = await p.evaluate(() => { const w = window.__walk; if (!w) return n
   const numbered = w.hotspots.filter(h => typeof h.n === 'number').length;
   const pins = document.querySelectorAll('#labels .pin').length;
   const imgs = w.hotspots.map(h => ({ id: h.id, file: h.images[0] && h.images[0].file, kind: h.images[0] && h.images[0].kind }));
-  return { numbered, pins, trees: w.treeCount, imgs, base: w.site.slug };
+  return { numbered, pins, trees: w.treeCount, imgs, base: w.site.slug, fitOverview: w.shadowFit ? w.shadowFit.half : null, groundAO: w.groundAO };
 });
 ok('viewer booted (window.__walk)', !!state);
 if (state) {
@@ -22,6 +22,7 @@ if (state) {
   ok('trees planted', state.trees > 100, 'trees=' + state.trees);
   const gr = await p.evaluate(() => ({ ...window.__walk.greenery, want: { variants: window.__walk.tier.canopy.variants, lawn: window.__walk.tier.lawn, water: window.__walk.tier.waterFps > 0 } }));
   ok('greenery: hedges on the plan\'s thin green strips; canopy variants, lawn and water match the tier', gr.hedges >= 100 && gr.trees >= 100 && gr.variants === gr.want.variants && gr.lawn === gr.want.lawn && gr.water === gr.want.water, JSON.stringify({ trees: gr.trees, hedges: gr.hedges, variants: gr.variants, lawn: gr.lawn, water: gr.water }));
+  ok('ground AO map painted (1024 px, building bases + trees + hedges darken the plan)', !!state.groundAO && state.groundAO.size[0] === 1024 && state.groundAO.darkened > 0.02 && state.groundAO.darkened < 0.6, JSON.stringify(state.groundAO));
   const fac = await p.evaluate(() => { const w = window.__walk; return { info: w.facades || [], block: !!w.site.facades, floors: Object.fromEntries(w.site.volumes.map(v => [v.id, v.floors])) }; });
   const finsVols = fac.info.filter(f => f.style === 'fins');
   ok('facades: every fins-style volume has paired fins, corner piers, one slab ring per floor and a source label', !fac.block || (finsVols.length > 0 && finsVols.every(f => f.fins >= 8 && f.piers >= 3 && f.rings === fac.floors[f.id] && !!f.source)), JSON.stringify(finsVols.map(f => [f.id, f.fins, f.piers, f.rings, !!f.source])));
@@ -37,6 +38,10 @@ if (state) {
   await p.click('#btnBack'); await p.click('#hotlist li.item[data-id="tennis-court"]'); await p.waitForTimeout(2400);
   const det = await p.evaluate(() => ({ hidden: document.getElementById('panelDetail').hidden, name: document.getElementById('dName').textContent, sel: window.__walk.selected, src: document.getElementById('dImg').getAttribute('src'), hash: location.hash }));
   ok('selecting from the list opens the detail with image + deep link', !det.hidden && det.name === 'Tennis court' && det.sel === 'tennis-court' && !!det.src && det.hash === '#h=tennis-court', JSON.stringify(det));
+  await p.evaluate(() => { const w = window.__walk; w.flyTo({ ...w.currentView(), radius: 60, phi: 0.35 }, 100); }); await p.waitForTimeout(1500);   // zoom floor, steep pitch: little ground in view
+  const fitClose = await p.evaluate(() => window.__walk.shadowFit && window.__walk.shadowFit.half);
+  ok('fitted shadow frustum: 320 (or 640) at the overview, 160 when zoomed in at the floor (light-space fit, texel-snapped)', [640, 320].includes(state.fitOverview) && fitClose === 160, JSON.stringify({ overview: state.fitOverview, close: fitClose }));
+  await p.evaluate(() => window.__walk.flyTo(window.__walk.fitView(), 100)); await p.waitForTimeout(1500);   // back to the overview for the theme + tour checks
   await p.click('#btnBack'); await p.click('#themes button[data-theme="sports"]'); await p.waitForTimeout(300);
   const th = await p.evaluate(() => ({ dim: document.querySelectorAll('#labels .pin.dim').length, shown: document.querySelectorAll('#hotlist li.item:not(.filtered)').length }));
   ok('theme filter dims other pins and filters the list', th.dim > 30 && th.shown === 6, JSON.stringify(th));
@@ -53,13 +58,26 @@ const WANT_LOG = { low: true, mid: true, high: false }, WANT_POST = { low: false
 const WANT_G = { low: { variants: 1, lawn: false, water: false }, mid: { variants: 3, lawn: true, water: true }, high: { variants: 3, lawn: true, water: true } };   // B3 greenery per tier (viewer/quality.js)
 const tierFacts = () => { const w = window.__walk; if (!w) return null;
   return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY, greenery: w.greenery, post: w.post.enabled, shadowMapSize: w.sun.shadow.mapSize.x, fitHalf: w.shadowFit && w.shadowFit.half }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
-const facts = { low: state ? await p.evaluate(tierFacts) : null };
+const facts = { low: state ? await p.evaluate(tierFacts) : null }; let aoDiff = null;
 for (const tier of ['mid', 'high']) {
   const pg = await ctx.newPage(); wire(pg);
   const tu = new URL(url); tu.searchParams.set('autostart', '800'); tu.searchParams.set('q', tier);
   const t0 = Date.now(); const r = await pg.goto(tu.toString(), { waitUntil: 'networkidle', timeout: 120000 });
   const booted = await pg.waitForFunction(() => !!window.__walk, null, { timeout: 180000 }).then(() => true).catch(() => false); await pg.waitForTimeout(3000);   // boot = top-level awaits + tree planting + (mid) two environment bakes; slow under software GL
-  facts[tier] = r && r.status() === 200 && booted ? { ...(await pg.evaluate(tierFacts)), bootMs: Date.now() - t0 } : { failed: { status: r && r.status(), booted, ms: Date.now() - t0 } }; await pg.close();
+  facts[tier] = r && r.status() === 200 && booted ? { ...(await pg.evaluate(tierFacts)), bootMs: Date.now() - t0 } : { failed: { status: r && r.status(), booted, ms: Date.now() - t0 } };
+  if (tier === 'high' && facts.high && !facts.high.failed) {   // A/B: the same frame with the AO pass on, then off — GTAO must change the picture, and only modestly
+    const shotA = await pg.locator('#gl').screenshot({ type: 'png', timeout: 240000 });
+    const f0 = await pg.evaluate(() => window.__walk.renderer.info.render.frame);
+    await pg.evaluate(() => { window.__walk.post.enabled = false; }); await pg.waitForFunction(f0 => window.__walk.renderer.info.render.frame >= f0 + 2, f0, { timeout: 120000 });
+    const shotB = await pg.locator('#gl').screenshot({ type: 'png', timeout: 240000 });
+    aoDiff = await pg.evaluate(async ([a, b]) => { const load = src => new Promise(r => { const im = new Image(); im.onload = () => r(im); im.src = src; }); const A = await load(a), B = await load(b);
+      const W = Math.min(A.width, B.width), H = Math.min(A.height, B.height), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
+      g.drawImage(A, 0, 0); const da = g.getImageData(0, 0, W, H).data; g.clearRect(0, 0, W, H); g.drawImage(B, 0, 0); const db = g.getImageData(0, 0, W, H).data;
+      let sum = 0, changed = 0; for (let i = 0; i < da.length; i += 4) { const d0 = Math.abs(da[i] - db[i]), d1 = Math.abs(da[i + 1] - db[i + 1]), d2 = Math.abs(da[i + 2] - db[i + 2]); sum += d0 + d1 + d2; if (Math.max(d0, d1, d2) > 6) changed++; }
+      // changed = share of pixels moved by > 6 levels: framing-independent, 0 when the pass is stuck on
+      return { meanAbsDiff: +(sum / (da.length / 4 * 3)).toFixed(2), changed: +(changed / (da.length / 4)).toFixed(4), w: W, h: H }; }, ['data:image/png;base64,' + shotA.toString('base64'), 'data:image/png;base64,' + shotB.toString('base64')]);
+  }
+  await pg.close();
 }
 for (const tier of ['low', 'mid', 'high']) {
   const f = facts[tier] && !facts[tier].failed ? facts[tier] : null; const why = facts[tier] && facts[tier].failed ? JSON.stringify(facts[tier]) : '';
@@ -67,6 +85,7 @@ for (const tier of ['low', 'mid', 'high']) {
     !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === WANT_LOG[tier] && f.post === WANT_POST[tier] && f.shadowMapSize === [4096, 2048, 1024][['high', 'mid', 'low'].indexOf(tier)] && f.clearAlpha === 1 && f.plinthTopY === -0.3 && !!f.greenery && f.greenery.hedges >= 100 && f.greenery.variants === WANT_G[tier].variants && f.greenery.lawn === WANT_G[tier].lawn && f.greenery.water === WANT_G[tier].water, f ? JSON.stringify(f) : why);
   ok(`tier ${tier} draw budget (≤${CEIL[tier][0]} calls, ≤${CEIL[tier][1]} tris)`, !!f && f.stats.calls > 0 && f.stats.calls <= CEIL[tier][0] && f.stats.triangles <= CEIL[tier][1], f ? JSON.stringify(f.stats) : 'no facts');
 }
+ok('GTAO changes the high-tier frame (A/B: AO pass on vs off — > 1 % of pixels move by > 6 levels, mean |Δ| < 40)', !!aoDiff && aoDiff.changed > 0.01 && aoDiff.meanAbsDiff < 40, JSON.stringify(aoDiff));
 ok('no shader compile errors on any tier', !errs.some(e => /Shader Error|WebGLProgram|WebGLShader|GLSL/i.test(e)), errs.filter(e => /Shader|GLSL/i.test(e)).slice(0, 3).join(' | '));
 ok('zero console errors / failed requests', errs.length === 0, errs.slice(0, 5).join(' | '));
 await b.close();
