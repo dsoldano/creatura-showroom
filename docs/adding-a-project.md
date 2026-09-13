@@ -39,6 +39,10 @@ node tools/make-ground.mjs projects/<slug>/source/masterplan-4k.png projects/<sl
 node tools/make-postcards.mjs projects/<slug>      # copies developer renders, cuts a plan-detail crop per hotspot, writes postcards/manifest.json
 ```
 
+## 3b. AI ground — how to re-test (optional, measured)
+
+The plan drawing can in principle be replaced by an AI photoreal "as built" top-down image, but only if nothing moves. `tools/trace.html` measures that: load the project (`?json=…`) and the candidate (`&img2=<file>&img2fit=crop` — generate the ground **crop** at the crop's aspect ratio, 3:4 for Belvedere), press `o` to blink, and run `window.__tracer.measureOverlay()` — it cross-correlates the plan's edge profile with the candidate's along every traced edge and reports `over6` (edges off by more than 6 px at the plan's width, ≈ 2 m) and `worst`. Acceptance: `over6 === 0`, no digits/labels/arrow, nothing invented (no pool that the plan does not draw). The metric is validated on the plan itself (must read 0) and a 10 px shifted copy (must read ≈ 10). Belvedere failed twice on semantics and text with geometry within 9 px — see `source/ai-ground-log.json`; a pass would ship as an opt-in ground with the plan as default.
+
 ## 4. AI postcards (1–2 h, optional but recommended)
 
 Import two of the developer's renders into Higgsfield as style references (`media_import_url`). For each key place without a render, one prompt with the fixed style prefix (see `postcards/ai-log.json` for Belvedere's) and a subject sentence read off the plan; two candidates each (`generate_image_batch`, `nano_banana_pro`, 3:2, 1k). Download, lay out on a contact sheet, reject anything with text, wrong tower counts or impossible geometry, then:

@@ -9,6 +9,7 @@ Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 - The ground is the developer's published master plan (AI-upscaled to 4K for crispness), clipped to the site boundary on a plinth.
 - Towers are massing extruded from traced footprints at true floor count, dressed with a facade rhythm (paired fins, balcony bands, stepped crown) read from the developer's published render, not the architect's drawings. Phase 2 blocks are ghosts with a faint rhythm.
 - Courts, rink, stepped well, plazas, portal and domes are simple 3D read off the plan. Trees, hedges and lawn are read from the plan's own greens at load time (dark greens → lobed trees, thin dark strips → hedges, light greens → a lawn tint); the pool surfaces are procedural ripples. Nothing is planted that the plan does not draw.
+- An AI photoreal ground was tried and rejected (Nano Banana Pro, two generations, 2026-09-13): measured against the traced plan, the best attempt still moved 5 of 67 edges by more than 6 px (up to 9 px ≈ 3 m), turned the rink and splash pad into swimming pools, and the second rendered the plan's labels into the photo. The plan stays the ground. Method and numbers: `projects/belvedere/source/ai-ground-log.json`, `docs/checkpoints/b5/`.
 - Postcards are one of three kinds, always labelled: **developer render**, **AI visualisation · indicative**, or **plan detail**. Nothing is invented beyond the plan's legend and the developer's public facts.
 
 ## Layout
