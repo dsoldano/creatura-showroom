@@ -66,4 +66,5 @@ Then open it on a phone: drag, pinch, play a tour. That is the performance gate;
 - Headless screenshots on this server take 25–55 s each; pass `timeout: 150000` to `page.screenshot`.
 - `check.mjs` plays tours at 60× because the software renderer runs about one frame per second.
 - Drawn canopies have light highlights, so the dark-green mask is a ring per tree; the sampler closes 1 cell before testing thinness (hedges = strips under ≈1.3 m at the 640-px sample). If a plan draws hedges wider than that, raise `openR` in `viewer/greenery.js`.
+- On the software renderer always pass `q=` in shot URLs: a device-resolved `high` measures its own frame time and would drop AO / reload as `mid`.
 - Run `check.mjs` on its own: with screenshot runs competing for the software renderer, a 60× tour can skip a keyframe between two one-second frames and the tours check reports fewer hotspots seen. It is a timing artefact of this host, not the viewer.
