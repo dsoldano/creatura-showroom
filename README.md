@@ -8,7 +8,7 @@ Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 
 - The ground is the developer's published master plan (AI-upscaled to 4K for crispness), clipped to the site boundary on a plinth.
 - Towers are massing extruded from traced footprints at true floor count, dressed with a facade rhythm (paired fins, balcony bands, stepped crown) read from the developer's published render, not the architect's drawings. Phase 2 blocks are ghosts with a faint rhythm.
-- Courts, rink, stepped well, plazas, portal and domes are simple 3D read off the plan. Trees are sampled from the plan's greens at load time.
+- Courts, rink, stepped well, plazas, portal and domes are simple 3D read off the plan. Trees, hedges and lawn are read from the plan's own greens at load time (dark greens → lobed trees, thin dark strips → hedges, light greens → a lawn tint); the pool surfaces are procedural ripples. Nothing is planted that the plan does not draw.
 - Postcards are one of three kinds, always labelled: **developer render**, **AI visualisation · indicative**, or **plan detail**. Nothing is invented beyond the plan's legend and the developer's public facts.
 
 ## Layout
@@ -45,7 +45,7 @@ Viewer URL parameters: `?project=<base>` (dev only), `autostart=<ms>` (skip the 
 
 Mobile flicker (2026-09-12): fixed by an opaque canvas + sky dome, logarithmic depth with no coplanar surfaces, no backdrop-filter on phones, and an idle loop that keeps rendering at ~11 fps. Owner-verified on a real phone.
 
-Quality tiers (arc 2, B1): `mid` (phones) and `low` (checks) keep every one of those fixes; render-quality features land on `high` first. The sky is procedural (three/addons Sky) and is also the environment map that lights the model; `applyLighting(k)` in app.js is the one place day/dusk is defined. Design: `docs/superpowers/specs/2026-09-12-siteplan-arc2-render-media-design.md`.
+Quality tiers (arc 2, B1): `mid` (phones) and `low` (checks) keep every one of those fixes; render-quality features land on `high` first. The sky is procedural (three/addons Sky) and is also the environment map that lights the model; `applyLighting(k)` in app.js is the one place day/dusk is defined. B3: canopy detail/variants, hedge spacing, lawn tint and water ripples are per tier (`viewer/quality.js`); `low` keeps flat water and no lawn tint. Design: `docs/superpowers/specs/2026-09-12-siteplan-arc2-render-media-design.md`.
 
 ## Hosting
 

@@ -29,6 +29,7 @@ Copy the shape of `projects/belvedere/site.json`:
 - `themes[]` (six is right) and each hotspot's `theme`, `caption` (two sentences, from the legend and public facts only, no compass words unless you have checked the arrow), `view` (`radius`, `phiDeg`, `thetaDeg`, `targetY`; θ=0 puts the camera on the plan's bottom side, +90° on the right, ±180° on the top, −90° on the left — aim from outside the site so ghost towers do not sit between camera and subject).
 - `developerRenders[]`: each render file → the hotspot ids it illustrates.
 - `facades` (optional), per volume kind: `{style: fins|stoneGlass|banded|ghost|plain, bayM, finW, finGap, recess, slabH, crownH, baseH, fin, band, glass, source}`. `fins` and `stoneGlass` build instanced fins, corner piers, slab rings and a crown from the traced footprint around a glazed core; `ghost` takes `rhythm: faint|none`. Without the block every volume renders as plain massing. If you read a rhythm off a developer render, say so in `source` and in the `disclaimer` — never present it as the architect's facade.
+- `plan.sampleImage` (optional, default `plan.jpg`): the image the tree/hedge/lawn sampler reads. Keep it the published plan even if `plan.ground` becomes an AI reinterpretation.
 - `tours[]`: keyframes `{t 0..1, pos [px,py], radius, phiDeg, thetaDeg, targetY?, hotspot?, overview?}`; keep consecutive θ differences under 180°; end with an `overview: true` frame.
 
 ## 3. Build assets (20 min)
@@ -64,4 +65,5 @@ Then open it on a phone: drag, pinch, play a tour. That is the performance gate;
 - ESM tools do not honour `NODE_PATH`; Playwright is symlinked into `tools/node_modules` (see README).
 - Headless screenshots on this server take 25–55 s each; pass `timeout: 150000` to `page.screenshot`.
 - `check.mjs` plays tours at 60× because the software renderer runs about one frame per second.
+- Drawn canopies have light highlights, so the dark-green mask is a ring per tree; the sampler closes 1 cell before testing thinness (hedges = strips under ≈1.3 m at the 640-px sample). If a plan draws hedges wider than that, raise `openR` in `viewer/greenery.js`.
 - Run `check.mjs` on its own: with screenshot runs competing for the software renderer, a 60× tour can skip a keyframe between two one-second frames and the tours check reports fewer hotspots seen. It is a timing artefact of this host, not the viewer.
