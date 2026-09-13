@@ -28,6 +28,7 @@ Copy the shape of `projects/belvedere/site.json`:
 - `name`, `developer`, `location`, `disclaimer`, `facts[]` (label/value; long values get the wide row).
 - `themes[]` (six is right) and each hotspot's `theme`, `caption` (two sentences, from the legend and public facts only, no compass words unless you have checked the arrow), `view` (`radius`, `phiDeg`, `thetaDeg`, `targetY`; θ=0 puts the camera on the plan's bottom side, +90° on the right, ±180° on the top, −90° on the left — aim from outside the site so ghost towers do not sit between camera and subject).
 - `developerRenders[]`: each render file → the hotspot ids it illustrates.
+- `developerVideos[]` `{file, hotspots[], credit, title, poster?, trim?}` and `embeds[]` `{provider: youtube|vimeo, id, hotspots[], title, credit, start}` — **official developer channel only**, never broker or third-party videos; consumed by the C2/C3 tools (`make-videos.mjs`), labelled "Developer video" / "Developer video · YouTube" in the viewer.
 - `facades` (optional), per volume kind: `{style: fins|stoneGlass|banded|ghost|plain, bayM, finW, finGap, recess, slabH, crownH, baseH, fin, band, glass, source}`. `fins` and `stoneGlass` build instanced fins, corner piers, slab rings and a crown from the traced footprint around a glazed core; `ghost` takes `rhythm: faint|none`. Without the block every volume renders as plain massing. If you read a rhythm off a developer render, say so in `source` and in the `disclaimer` — never present it as the architect's facade.
 - `plan.sampleImage` (optional, default `plan.jpg`): the image the tree/hedge/lawn sampler reads. Keep it the published plan even if `plan.ground` becomes an AI reinterpretation.
 - `tours[]`: keyframes `{t 0..1, pos [px,py], radius, phiDeg, thetaDeg, targetY?, hotspot?, overview?}`; keep consecutive θ differences under 180°; end with an `overview: true` frame.
@@ -52,6 +53,8 @@ node tools/import-ai.mjs projects/<slug> selection.json   # see tools/import-ai.
 ```
 
 Every AI image is shown with the label "AI visualisation · indicative" and a credit line. Never present one as a developer render.
+
+The manifest tools each own their kinds and keep everything else: `make-postcards.mjs` owns developer + plan entries, `import-ai.mjs` owns AI stills; each re-sorts every hotspot's list by provenance (`viewer/media-kinds.js`, ruling: developer video > developer render > official embed > AI loop > AI still > plan detail), so the first entry is always the most trustworthy and the viewer's gallery shows the rest as further slides.
 
 ## 5. Deploy and verify (20 min)
 
