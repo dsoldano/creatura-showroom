@@ -99,7 +99,7 @@ export function plantGreenery(site, img, ctx) {
     for (let i = 0; i < W * H; i++) { const v = lawn[i] && !tree[i] ? 255 : 0; id.data[i * 4] = v; id.data[i * 4 + 1] = v; id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; }
     lg.putImageData(id, 0, 0); lawnTexture = new THREE.CanvasTexture(lc); lawnTexture.minFilter = THREE.LinearFilter; lawnTexture.generateMipmaps = false;
   }
-  return { trees: trees.length, hedges: hedges.length, variants: V, treeMeshes, trunks, hedgeMesh, lawnTexture };
+  return { trees: trees.length, hedges: hedges.length, variants: V, treeMeshes, trunks, hedgeMesh, lawnTexture, treePts: trees.map(p => ({ x: p.x, z: p.z, s: 0.75 + p.r2 * 0.7 })), hedgePts: hedges.map(p => ({ x: p.x, z: p.z })) };   // points feed the baked ground AO (B4); s = the canopy instance scale
 }
 
 // Ground shader: 0.5 m hash noise ±5 %, a slight green lift, matte lawn vs slightly sheened paving. No normal map — the plan stays a picture.

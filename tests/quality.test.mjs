@@ -39,3 +39,10 @@ test('greenery per tier (spec table): canopy detail/variants 1/3 · 0/3 · 0/1, 
   assert.equal(TIERS.high.hedgeSpacingM, 1.0); assert.equal(TIERS.mid.hedgeSpacingM, 1.5); assert.equal(TIERS.low.hedgeSpacingM, 1.5);
   assert.equal(TIERS.low.lawn, false); assert.equal(TIERS.low.waterFps, 0); assert.ok(TIERS.mid.lawn && TIERS.mid.waterFps > 0 && TIERS.high.waterFps >= TIERS.mid.waterFps);
 });
+
+test('B4: log depth off only on high (the AO pass reads linear depth); shadow maps 4096/2048/1024; composer on high only; camera near', () => {
+  assert.equal(TIERS.high.logDepth, false); assert.equal(TIERS.mid.logDepth, true); assert.equal(TIERS.low.logDepth, true);
+  assert.equal(TIERS.high.shadowMap, 4096); assert.equal(TIERS.mid.shadowMap, 2048); assert.equal(TIERS.low.shadowMap, 1024);
+  assert.equal(TIERS.high.composer, true); assert.equal(TIERS.mid.composer, false); assert.equal(TIERS.low.composer, false);
+  assert.equal(TIERS.high.near, 3); assert.equal(TIERS.mid.near, 2); assert.equal(TIERS.low.near, 2);
+});
