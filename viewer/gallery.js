@@ -13,7 +13,8 @@ export function renderMedia(entry, hotspot, base) {
 }
 
 export function createGallery({ strip, dots, prev, next, badge, credit, base }) {
-  let entries = [], index = 0, hotspot = null, io = null;
+  let entries = [], index = 0, hotspot = null, io = null, pending = null, pendingUntil = 0;   // pending: the slide go() asked for — authoritative until its scroll lands (or 1.2 s pass)
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   function setActive(i) {
     index = i; const e = entries[i];
     [...strip.children].forEach((s, k) => s.classList.toggle('active', k === i));
@@ -28,10 +29,13 @@ export function createGallery({ strip, dots, prev, next, badge, credit, base }) 
     strip.classList.toggle('wide', entries.some(e => isVideoKind(e.kind)));
     strip.parentElement.classList.toggle('single', entries.length <= 1); strip.parentElement.hidden = entries.length === 0;
     strip.scrollLeft = 0; setActive(0);
-    io = new IntersectionObserver(items => { let best = null; for (const it of items) if (it.isIntersecting && (!best || it.intersectionRatio > best.intersectionRatio)) best = it; if (best) setActive(+best.target.dataset.i); }, { root: strip, threshold: [0.6] });
+    pending = null;
+    io = new IntersectionObserver(items => { let best = null; for (const it of items) if (it.isIntersecting && (!best || it.intersectionRatio > best.intersectionRatio)) best = it; if (!best) return;
+      const i = +best.target.dataset.i; if (pending !== null) { if (i === pending) pending = null; else if (performance.now() < pendingUntil) return; else pending = null; }   // a stale notification must not undo go()
+      setActive(i); }, { root: strip, threshold: [0.6] });
     for (const s of strip.children) io.observe(s);
   }
-  function go(i) { if (!entries.length) return; const k = Math.max(0, Math.min(entries.length - 1, i)); strip.scrollTo({ left: k * strip.clientWidth, behavior: 'smooth' }); setActive(k); }
+  function go(i) { if (!entries.length) return; const k = Math.max(0, Math.min(entries.length - 1, i)); pending = k; pendingUntil = performance.now() + 1200; strip.scrollTo({ left: k * strip.clientWidth, behavior: reduced.matches ? 'auto' : 'smooth' }); setActive(k); }
   prev.addEventListener('click', () => go(index - 1)); next.addEventListener('click', () => go(index + 1));
   return { show, go, get index() { return index; }, get count() { return entries.length; }, get entries() { return entries; }, get hotspot() { return hotspot; } };
 }

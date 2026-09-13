@@ -1,9 +1,10 @@
 // Live checks for a deployed/served viewer. usage: node tools/check.mjs <viewer url with ?project=… or a deployed project url>
 import { chromium } from 'playwright';
+import { RANK } from '../viewer/media-kinds.js';
 const url = process.argv[2]; if (!url) { console.error('usage: node tools/check.mjs <url>'); process.exit(2); }
 const results = []; const ok = (name, pass, info = '') => { results.push({ name, pass, info }); console.log((pass ? 'PASS' : 'FAIL') + '  ' + name + (info ? '  — ' + info : '')); };
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); const p = await ctx.newPage();
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' }); const p = await ctx.newPage();   // reduced motion: the gallery scrolls instantly (SwiftShader cannot animate a smooth scroll)
 const errs = []; const wire = pg => { pg.on('pageerror', e => errs.push('pageerror: ' + e.message)); pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); }); pg.on('requestfailed', r => errs.push('requestfailed: ' + r.url())); }; wire(p);
 const u = new URL(url); u.searchParams.set('autostart', '800'); u.searchParams.set('q', 'low'); u.searchParams.set('tourSpeed', '60');
 const resp = await p.goto(u.toString(), { waitUntil: 'networkidle', timeout: 90000 }); ok('page loads', !!resp && resp.status() === 200, 'status ' + (resp && resp.status()));
@@ -12,13 +13,14 @@ const state = await p.evaluate(() => { const w = window.__walk; if (!w) return n
   const numbered = w.hotspots.filter(h => typeof h.n === 'number').length;
   const pins = document.querySelectorAll('#labels .pin').length;
   const imgs = w.hotspots.map(h => ({ id: h.id, file: h.images[0] && h.images[0].file, kind: h.images[0] && h.images[0].kind }));
-  return { numbered, pins, trees: w.treeCount, imgs, base: w.site.slug, fitOverview: w.shadowFit ? w.shadowFit.half : null, groundAO: w.groundAO };
+  const media = w.hotspots.map(h => ({ id: h.id, kinds: h.images.map(e => e.kind), files: h.images.map(e => e.file || e.poster) }));
+  return { numbered, pins, trees: w.treeCount, imgs, media, wantNumbered: w.site.hotspots.filter(h => typeof h.n === 'number').length, wantPins: w.site.hotspots.length, base: w.site.slug, fitOverview: w.shadowFit ? w.shadowFit.half : null, groundAO: w.groundAO };
 });
 ok('viewer booted (window.__walk)', !!state);
 if (state) {
   // the WebGL buffer is not readable after present (no preserveDrawingBuffer), so judge blankness by JPEG entropy of a canvas capture
   const jpg = await p.locator('#gl').screenshot({ type: 'jpeg', quality: 60, timeout: 150000 }); ok('canvas is non-blank', jpg.length > 40000, 'jpeg bytes=' + jpg.length);
-  ok('41 numbered hotspots + 3 tower pins in DOM', state.numbered === 41 && state.pins === 44, `numbered=${state.numbered} pins=${state.pins}`);
+  ok(`${state.wantNumbered} numbered hotspots + ${state.wantPins - state.wantNumbered} tower pins in DOM`, state.numbered === state.wantNumbered && state.pins === state.wantPins, `numbered=${state.numbered} pins=${state.pins}`);
   ok('trees planted', state.trees > 100, 'trees=' + state.trees);
   const gr = await p.evaluate(() => ({ ...window.__walk.greenery, want: { variants: window.__walk.tier.canopy.variants, lawn: window.__walk.tier.lawn, water: window.__walk.tier.waterFps > 0 } }));
   ok('greenery: hedges on the plan\'s thin green strips; canopy variants, lawn and water match the tier', gr.hedges >= 100 && gr.trees >= 100 && gr.variants === gr.want.variants && gr.lawn === gr.want.lawn && gr.water === gr.want.water, JSON.stringify({ trees: gr.trees, hedges: gr.hedges, variants: gr.variants, lawn: gr.lawn, water: gr.water }));
@@ -28,16 +30,24 @@ if (state) {
   ok('facades: every fins-style volume has paired fins, corner piers, one slab ring per floor and a source label', !fac.block || (finsVols.length > 0 && finsVols.every(f => f.fins >= 8 && f.piers >= 3 && f.rings === fac.floors[f.id] && !!f.source)), JSON.stringify(finsVols.map(f => [f.id, f.fins, f.piers, f.rings, !!f.source])));
   const missing = state.imgs.filter(i => !i.file); ok('every hotspot has a postcard', missing.length === 0, missing.length ? 'missing: ' + missing.map(m => m.id).join(',') : `${state.imgs.length} images`);
   const base = new URL(u.searchParams.get('project') || './', u).toString();
-  let bad = 0; for (const i of state.imgs) { if (!i.file) continue; const r = await p.request.get(base + 'postcards/' + i.file); const len = +(r.headers()['content-length'] || 0); if (!r.ok() || (len && len < 2000)) { bad++; console.log('   bad image', i.file, r.status(), len); } }
-  ok('all postcard files load (200, >2 KB)', bad === 0, 'checked ' + state.imgs.length);
+  const files = [...new Set(state.media.flatMap(m => m.files).filter(Boolean))]; let bad = 0;
+  for (const f of files) { const r = await p.request.get(base + 'postcards/' + f); const len = +(r.headers()['content-length'] || 0); if (!r.ok() || (len && len < 2000)) { bad++; console.log('   bad file', f, r.status(), len); } }
+  ok('every media file of every hotspot loads (200, >2 KB)', bad === 0, 'checked ' + files.length);
+  ok('hero order follows ruling 4 (provenance first) on every hotspot', state.media.every(m => m.kinds.every((k, i) => i === 0 || (RANK[k] ?? 99) >= (RANK[m.kinds[i - 1]] ?? 99))), JSON.stringify(state.media.filter(m => m.kinds.length > 1).slice(0, 3)));
   // interaction 1: click a pin at the overview (all pins are in the frustum here)
   await p.click('#labels .pin[data-id="stepped-well-plaza"]'); await p.waitForTimeout(2400);
   const det2 = await p.evaluate(() => ({ name: document.getElementById('dName').textContent, sel: window.__walk.selected, hidden: document.getElementById('panelDetail').hidden }));
   ok('clicking a pin selects it and opens the detail', det2.sel === 'stepped-well-plaza' && det2.name === 'Stepped well plaza' && !det2.hidden, JSON.stringify(det2));
   // interaction 2: back to the list, select from the list, confirm image + deep link
   await p.click('#btnBack'); await p.click('#hotlist li.item[data-id="tennis-court"]'); await p.waitForTimeout(2400);
-  const det = await p.evaluate(() => ({ hidden: document.getElementById('panelDetail').hidden, name: document.getElementById('dName').textContent, sel: window.__walk.selected, src: document.getElementById('dImg').getAttribute('src'), hash: location.hash }));
+  const det = await p.evaluate(() => ({ hidden: document.getElementById('panelDetail').hidden, name: document.getElementById('dName').textContent, sel: window.__walk.selected, src: (() => { const im = document.querySelector('#dStrip .slide.active img'); return im ? im.getAttribute('src') : null; })(), hash: location.hash }));
   ok('selecting from the list opens the detail with image + deep link', !det.hidden && det.name === 'Tennis court' && det.sel === 'tennis-court' && !!det.src && det.hash === '#h=tennis-court', JSON.stringify(det));
+  const gal = await p.evaluate(async () => { const w = window.__walk; const two = w.hotspots.find(h => h.images.length >= 2); if (!two) return { skipped: true }; w.select(two.id, false);
+    const g = w.gallery, dots = document.querySelectorAll('#dDots .dot').length, badge0 = document.getElementById('dBadge').textContent, i0 = g.index; g.go(1); await new Promise(r => setTimeout(r, 900));
+    const badge1 = document.getElementById('dBadge').textContent, scrolled = document.getElementById('dStrip').scrollLeft > 10, i1 = g.index;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); await new Promise(r => setTimeout(r, 900));
+    return { id: two.id, count: g.count, dots, i0, i1, badge0, badge1, scrolled, back: g.index, kinds: g.entries.map(e => e.kind) }; });
+  ok('gallery: a two-entry hotspot shows dots, go(1) scrolls the strip and relabels the badge, ← returns', gal.skipped || (gal.count >= 2 && gal.dots === gal.count && gal.i0 === 0 && gal.i1 === 1 && gal.badge1 !== gal.badge0 && gal.scrolled && gal.back === 0), JSON.stringify(gal));
   await p.evaluate(() => { const w = window.__walk; w.flyTo({ ...w.currentView(), radius: 60, phi: 0.35 }, 100); }); await p.waitForTimeout(1500);   // zoom floor, steep pitch: little ground in view
   const fitClose = await p.evaluate(() => window.__walk.shadowFit && window.__walk.shadowFit.half);
   ok('fitted shadow frustum: 320 (or 640) at the overview, 160 when zoomed in at the floor (light-space fit, texel-snapped)', [640, 320].includes(state.fitOverview) && fitClose === 160, JSON.stringify({ overview: state.fitOverview, close: fitClose }));

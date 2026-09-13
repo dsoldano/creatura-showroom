@@ -8,6 +8,8 @@ import { canopyMaterial, plantGreenery, lawnify, waterMaterial, waterDisc } from
 import { lightBasis, fitShadow } from './post-math.js';
 import { buildGroundAO } from './ground-ao.js';
 import { createPost } from './post.js';
+import { chipOf, sortByRank } from './media-kinds.js';
+import { createGallery } from './gallery.js';
 
 // ============ project ============
 const $ = s => document.querySelector(s);
@@ -60,7 +62,7 @@ controls.enabled = false;
 
 const DEFAULT_VIEW = { radius: 0, phi: THREE.MathUtils.degToRad(52), theta: THREE.MathUtils.degToRad(28), target: new THREE.Vector3(0, 22, -siteD * 0.04) };
 const isPhone = () => matchMedia('(max-width: 760px)').matches;
-const PANEL_W = 374, SHEET_H = 204;
+const PANEL_W = 374, SHEET_H = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sheet-h')) || 204;   // one number, owned by style.css
 function visibleAspect() { const w = canvas.clientWidth, h = canvas.clientHeight; return isPhone() ? w / Math.max(1, h - SHEET_H) : (w - PANEL_W) / Math.max(1, h); }
 function fitRadius() { const a = visibleAspect(); return Math.max(siteW, siteD) * 1.75 * Math.max(1, 0.7 / a); }
 function fitView() { const a = visibleAspect(); const portrait = a < 0.8;
@@ -333,6 +335,7 @@ const northRad = THREE.MathUtils.degToRad(site.plan.northDeg ?? 0), northVec = n
 function updateCompass() { const a = Math.atan2(northVec.x, -northVec.z) + controls.getAzimuthalAngle(); needle.style.transform = `rotate(${THREE.MathUtils.radToDeg(a).toFixed(1)}deg)`; }
 $('#btnReset').addEventListener('click', () => flyTo(fitView(), 1400));
 window.addEventListener('keydown', e => { if (e.key === 'Escape') { if (tour) endTour(true); else { deselect(); flyTo(fitView(), 1400); } } });
+window.addEventListener('keydown', e => { if ($('#panelDetail').hidden || ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return; if (e.key === 'ArrowRight') { gallery.go(gallery.index + 1); e.preventDefault(); } if (e.key === 'ArrowLeft') { gallery.go(gallery.index - 1); e.preventDefault(); } });
 const btnLight = $('#btnLight');
 function setLight(mode) { lightTarget = mode === 'dusk' ? 1 : 0; btnLight.textContent = lightTarget ? 'Day' : 'Dusk'; btnLight.setAttribute('aria-pressed', String(!!lightTarget)); }
 btnLight.addEventListener('click', () => setLight(lightTarget ? 'day' : 'dusk'));
@@ -352,12 +355,12 @@ const manifest = await fetch(BASE + (site.postcards?.manifest || 'postcards/mani
 const hotspots = site.hotspots.map(h => {
   const vol = h.volume && volumeMeshes[h.volume]; const v = vol && vol.userData.volume;
   const y = v ? (v.heightM || v.floors * FLOOR_H) + 8 : 1.4;
-  return { ...h, world: new THREE.Vector3(toX(h.pos[0]), y, toZ(h.pos[1])), isTower: !!h.volume, images: manifest.images[h.id] || [] };
+  return { ...h, world: new THREE.Vector3(toX(h.pos[0]), y, toZ(h.pos[1])), isTower: !!h.volume, images: sortByRank(manifest.images[h.id] || []) };   // hero = the provenance-first entry, whatever order the manifest came in
 });
 const themeName = Object.fromEntries((site.themes || []).map(t => [t.id, t.name]));
-const KIND_LABEL = { developer: 'Developer render', ai: 'AI visualisation · indicative', plan: 'Plan detail' };
 const occluders = Object.values(volumeMeshes).filter(m => m.userData.volume.kind !== 'future');
 const pinEls = new Map(); let selected = null, activeTheme = null;
+const gallery = createGallery({ strip: $('#dStrip'), dots: $('#dDots'), prev: $('#dPrev'), next: $('#dNext'), badge: $('#dBadge'), credit: $('#dCredit'), base: BASE });
 
 // pins (DOM, positioned by CSS2DRenderer)
 for (const h of hotspots) {
@@ -390,7 +393,7 @@ $('#facts').innerHTML = (site.facts || []).map(f => `<div class="${f.value.lengt
 $('#themes').innerHTML = `<button aria-pressed="true" data-theme="">All</button>` + (site.themes || []).map(t => `<button aria-pressed="false" data-theme="${t.id}">${t.name}</button>`).join('');
 $('#themes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setTheme(b.dataset.theme || null); });
 { const groups = new Map(); for (const h of hotspots) { const g = groups.get(h.theme) || []; g.push(h); groups.set(h.theme, g); }
-  $('#hotlist').innerHTML = [...groups].map(([t, list]) => `<li class="group" data-theme="${t}">${themeName[t] || t}</li>` + list.map(h => `<li class="item${h.isTower ? ' tower' : ''}" data-id="${h.id}" data-theme="${h.theme}"><span class="n">${h.n}</span><span class="nm">${h.name}</span><span class="kind">${h.images[0] ? (h.images[0].kind === 'developer' ? 'render' : h.images[0].kind) : ''}</span></li>`).join('')).join('');
+  $('#hotlist').innerHTML = [...groups].map(([t, list]) => `<li class="group" data-theme="${t}">${themeName[t] || t}</li>` + list.map(h => `<li class="item${h.isTower ? ' tower' : ''}" data-id="${h.id}" data-theme="${h.theme}"><span class="n">${h.n}</span><span class="nm">${h.name}</span><span class="kind">${chipOf(h.images[0])}${h.images.length > 1 ? ' ·' + h.images.length : ''}</span></li>`).join('')).join('');
   $('#hotlist').addEventListener('click', e => { const li = e.target.closest('li.item'); if (li) select(li.dataset.id, true); }); }
 function setTheme(t) {
   activeTheme = t;
@@ -407,10 +410,8 @@ function select(id, fly, quiet) {
   for (const x of hotspots) pinEls.get(x.id).classList.toggle('active', x.id === id);
   document.querySelectorAll('#hotlist li.item').forEach(li => li.classList.toggle('active', li.dataset.id === id));
   ring.visible = !h.isTower; ring.position.set(h.world.x, 0.45, h.world.z);
-  const img = h.images[0];
   $('#dNum').textContent = h.n; $('#dName').textContent = h.name; $('#dCaption').textContent = h.caption || '';
-  const im = $('#dImg'); if (img) { im.src = BASE + 'postcards/' + img.file; im.alt = h.name + ' — ' + KIND_LABEL[img.kind]; im.hidden = false; } else { im.removeAttribute('src'); im.hidden = true; }
-  $('#dBadge').textContent = img ? KIND_LABEL[img.kind] : ''; $('#dBadge').className = 'badge ' + (img ? img.kind : ''); $('#dCredit').textContent = img ? (img.credit || '') : '';
+  gallery.show(h);
   $('#panelHome').hidden = true; $('#panelDetail').hidden = false; $('#panelDetail').scrollTop = 0; if (!quiet) panel.classList.remove('collapsed');
   history.replaceState(null, '', '#h=' + encodeURIComponent(id));
   if (fly) flyToHotspot(h);
@@ -536,7 +537,7 @@ renderer.setAnimationLoop(now => {
   updateCompass(); updatePins(now); fitShadowToView(); post.render(); labelRenderer.render(scene, camera);
 });
 
-window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
+window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, gallery, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
   quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP, facades: facadeInfo,
   greenery: { trees: greenery.trees, hedges: greenery.hedges, variants: greenery.variants, lawn: !!greenery.lawnTexture, water: !!waterTex }, hedgeCount: greenery.hedges, waterMeshes,
   post, sun, get shadowFit() { return shadowFit; }, groundAO: { size: groundAO.size, darkened: groundAO.darkened }, autoTier, logDepth: LOG_DEPTH,
