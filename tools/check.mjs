@@ -20,6 +20,8 @@ if (state) {
   const jpg = await p.locator('#gl').screenshot({ type: 'jpeg', quality: 60, timeout: 150000 }); ok('canvas is non-blank', jpg.length > 40000, 'jpeg bytes=' + jpg.length);
   ok('41 numbered hotspots + 3 tower pins in DOM', state.numbered === 41 && state.pins === 44, `numbered=${state.numbered} pins=${state.pins}`);
   ok('trees planted', state.trees > 100, 'trees=' + state.trees);
+  const gr = await p.evaluate(() => ({ ...window.__walk.greenery, want: { variants: window.__walk.tier.canopy.variants, lawn: window.__walk.tier.lawn, water: window.__walk.tier.waterFps > 0 } }));
+  ok('greenery: hedges on the plan\'s thin green strips; canopy variants, lawn and water match the tier', gr.hedges >= 100 && gr.trees >= 100 && gr.variants === gr.want.variants && gr.lawn === gr.want.lawn && gr.water === gr.want.water, JSON.stringify({ trees: gr.trees, hedges: gr.hedges, variants: gr.variants, lawn: gr.lawn, water: gr.water }));
   const fac = await p.evaluate(() => { const w = window.__walk; return { info: w.facades || [], block: !!w.site.facades, floors: Object.fromEntries(w.site.volumes.map(v => [v.id, v.floors])) }; });
   const finsVols = fac.info.filter(f => f.style === 'fins');
   ok('facades: every fins-style volume has paired fins, corner piers, one slab ring per floor and a source label', !fac.block || (finsVols.length > 0 && finsVols.every(f => f.fins >= 8 && f.piers >= 3 && f.rings === fac.floors[f.id] && !!f.source)), JSON.stringify(finsVols.map(f => [f.id, f.fins, f.piers, f.rings, !!f.source])));
@@ -47,8 +49,9 @@ if (state) {
 // ---- quality tiers: each boots as itself, keeps the flicker contract (opaque canvas = clear alpha 1, log depth, plinth cap -0.3), stays under its draw budget, compiles every shader ----
 const CEIL = { low: [120, 200000], mid: [140, 300000], high: [220, 700000] };   // [draw calls, triangles] per WHOLE frame incl. the shadow pass (B1 baseline 87 / 98k); recalibrate when a sub-phase adds geometry
 const WANT_ENV = { low: false, mid: true, high: true };
+const WANT_G = { low: { variants: 1, lawn: false, water: false }, mid: { variants: 3, lawn: true, water: true }, high: { variants: 3, lawn: true, water: true } };   // B3 greenery per tier (viewer/quality.js)
 const tierFacts = () => { const w = window.__walk; if (!w) return null;
-  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
+  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY, greenery: w.greenery }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
 const facts = { low: state ? await p.evaluate(tierFacts) : null };
 for (const tier of ['mid', 'high']) {
   const pg = await ctx.newPage(); wire(pg);
@@ -59,8 +62,8 @@ for (const tier of ['mid', 'high']) {
 }
 for (const tier of ['low', 'mid', 'high']) {
   const f = facts[tier] && !facts[tier].failed ? facts[tier] : null; const why = facts[tier] && facts[tier].failed ? JSON.stringify(facts[tier]) : '';
-  ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth on, opaque canvas, plinth cap -0.3)`,
-    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3, f ? JSON.stringify(f) : why);
+  ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth on, opaque canvas, plinth cap -0.3, ${WANT_G[tier].variants} canopy variant(s), lawn ${WANT_G[tier].lawn ? 'on' : 'off'}, water ${WANT_G[tier].water ? 'rippled' : 'flat'})`,
+    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3 && !!f.greenery && f.greenery.hedges >= 100 && f.greenery.variants === WANT_G[tier].variants && f.greenery.lawn === WANT_G[tier].lawn && f.greenery.water === WANT_G[tier].water, f ? JSON.stringify(f) : why);
   ok(`tier ${tier} draw budget (≤${CEIL[tier][0]} calls, ≤${CEIL[tier][1]} tris)`, !!f && f.stats.calls > 0 && f.stats.calls <= CEIL[tier][0] && f.stats.triangles <= CEIL[tier][1], f ? JSON.stringify(f.stats) : 'no facts');
 }
 ok('no shader compile errors on any tier', !errs.some(e => /Shader Error|WebGLProgram|WebGLShader|GLSL/i.test(e)), errs.filter(e => /Shader|GLSL/i.test(e)).slice(0, 3).join(' | '));
