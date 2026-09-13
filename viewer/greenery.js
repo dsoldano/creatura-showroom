@@ -46,23 +46,30 @@ export function plantGreenery(site, img, ctx) {
   const thin = thinOf(tree, W, H, 1, 2);
   const c = site.plan.crop;
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  // jittered grid sampler with a minimum spacing; accept(i) tests the 640-px mask index
-  function sample(accept, stepM, cellM) {
-    const stepPx = stepM / mpp, taken = new Map(), pts = [];
+  // minimum-spacing gate on a metre grid: true (and remembered) when no earlier point lies within cellM
+  const spaced = (taken, x, z, cellM) => { const gx = Math.floor(x / cellM), gz = Math.floor(z / cellM);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) { const k = taken.get((gx + dx) + ',' + (gz + dz)); if (k && Math.hypot(k[0] - x, k[1] - z) < cellM) return false; }
+    taken.set(gx + ',' + gz, [x, z]); return true; };
+  const point = (x, z, ix, iy) => ({ x, z, ix, iy, r: rnd(), r2: rnd(), r3: rnd(), r4: rnd() });
+  // trees: jittered 2.4 m grid, 3 m minimum spacing, only on dark green that is not a thin strip
+  const trees = [];
+  { const stepPx = 2.4 / mpp, taken = new Map();
     for (let py = c.y; py < c.y + c.h; py += stepPx) for (let px = c.x; px < c.x + c.w; px += stepPx) {
       const jx = px + (rnd() - 0.5) * stepPx, jy = py + (rnd() - 0.5) * stepPx;
       const ix = Math.floor((jx - c.x) / c.w * W), iy = Math.floor((jy - c.y) / c.h * H); if (ix < 0 || iy < 0 || ix >= W || iy >= H) continue;
-      if (!accept(iy * W + ix)) continue;
+      if (!(tree[iy * W + ix] && !thin[iy * W + ix])) continue;
       if (!pointInPoly([jx, jy], site.boundary) || isBlocked(jx, jy)) continue;
-      const x = toX(jx), z = toZ(jy), gx = Math.floor(x / cellM), gz = Math.floor(z / cellM); let near = false;
-      for (let dx = -1; dx <= 1 && !near; dx++) for (let dz = -1; dz <= 1; dz++) { const k = taken.get((gx + dx) + ',' + (gz + dz)); if (k && Math.hypot(k[0] - x, k[1] - z) < cellM) { near = true; break; } }
-      if (near) continue;
-      taken.set(gx + ',' + gz, [x, z]); pts.push({ x, z, ix, iy, r: rnd(), r2: rnd(), r3: rnd(), r4: rnd() });
-    }
-    return pts;
-  }
-  const trees = sample(i => tree[i] && !thin[i], 2.4, 3.0);
-  const hedges = sample(i => thin[i], tier.hedgeSpacingM * 0.7, tier.hedgeSpacingM);
+      const x = toX(jx), z = toZ(jy); if (spaced(taken, x, z, 3.0)) trees.push(point(x, z, ix, iy));
+    } }
+  // hedges: walk every thin cell in row order and keep those ≥ spacing from an earlier one → continuous runs along each strip at exactly the tier's spacing
+  const hedges = [];
+  { const taken = new Map();
+    for (let iy = 0; iy < H; iy++) for (let ix = 0; ix < W; ix++) {
+      if (!thin[iy * W + ix]) continue;
+      const jx = c.x + (ix + 0.5) * c.w / W, jy = c.y + (iy + 0.5) * c.h / H;
+      if (!pointInPoly([jx, jy], site.boundary) || isBlocked(jx, jy)) continue;
+      const x = toX(jx), z = toZ(jy); if (spaced(taken, x, z, tier.hedgeSpacingM)) hedges.push(point(x, z, ix, iy));
+    } }
   // trees: one InstancedMesh per canopy variant (chosen by hash), one trunk mesh
   const V = tier.canopy.variants, byV = Array.from({ length: V }, () => []);
   trees.forEach(p => byV[Math.floor(p.r * V) % V].push(p));
@@ -80,7 +87,8 @@ export function plantGreenery(site, img, ctx) {
   // hedges: one box per site, long axis along the strip (image angle a → world yaw −a: plan y is world +z), clipped proportions with a little variation, no shadow
   const hedgeMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), ctx.mats.hedge, Math.max(1, hedges.length)); hedgeMesh.count = hedges.length;
   const hpal = [0x3f6b32, 0x476f38, 0x3a6430];
-  hedges.forEach((p, i) => { const a = strandYaw(thin, W, H, p.ix, p.iy), h = 0.9 * (0.85 + p.r2 * 0.3), L = 1.4 * (0.9 + p.r3 * 0.25);
+  const hedgeL = Math.max(1.4, tier.hedgeSpacingM * 1.2);   // longer than the spacing so consecutive boxes overlap into one run
+  hedges.forEach((p, i) => { const a = strandYaw(thin, W, H, p.ix, p.iy), h = 0.9 * (0.85 + p.r2 * 0.3), L = hedgeL * (0.95 + p.r3 * 0.15);
     m.compose(new THREE.Vector3(p.x, h / 2, p.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a, 0)), new THREE.Vector3(L, h, 1.1)); hedgeMesh.setMatrixAt(i, m);
     hedgeMesh.setColorAt(i, col.setHex(hpal[Math.floor(p.r * hpal.length)]).offsetHSL(0, 0, (p.r4 - 0.5) * 0.06)); });
   hedgeMesh.castShadow = false; hedgeMesh.receiveShadow = true; hedgeMesh.name = 'hedges';
@@ -117,7 +125,7 @@ export function waterMaterial(tier) {
   if (!tier.waterFps) return { material: new THREE.MeshPhysicalMaterial({ color: 0x3f9ec4, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.94 }), texture: null };   // flat water (low)
   const texture = new THREE.DataTexture(waterNormalData(256), 256, 256, THREE.RGBAFormat, THREE.UnsignedByteType);
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter; texture.generateMipmaps = true; texture.needsUpdate = true;
-  const material = new THREE.MeshPhysicalMaterial({ color: 0x3f9ec4, roughness: 0.05, metalness: 0, ior: 1.33, transparent: true, opacity: 0.92, normalMap: texture, normalScale: new THREE.Vector2(0.35, 0.35) });
+  const material = new THREE.MeshPhysicalMaterial({ color: 0x2f86a8, roughness: 0.04, metalness: 0, ior: 1.33, clearcoat: 0.5, clearcoatRoughness: 0.08, transparent: true, opacity: 0.92, normalMap: texture, normalScale: new THREE.Vector2(0.6, 0.6) });   // tuned round 1: 0x3f9ec4 / 0.35 read as a flat cyan disc from drone height
   return { material, texture };
 }
 // A water disc whose uvs are world metres / WATER_TILE_M: the ripple tile is continuous across every pool and scrolls with texture.offset.

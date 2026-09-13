@@ -39,7 +39,7 @@
     "northDeg": 135,
     "note": "All coordinates are pixels in the 1200×848 source image. crop is the region draped as ground.",
     "northNote": "Screen angle of north, clockwise from image-up, read from the plan arrow (approx).",
-    "ground": "plan.jpg"
+    "ground": "plan.jpg", "sampleImage": "plan.jpg"
   },
   "scale": {
     "acres": 10.75,

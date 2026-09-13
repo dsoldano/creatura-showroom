@@ -4,6 +4,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 import { TIERS, resolveQuality } from './quality.js';
 import { createSky } from './sky.js';
 import { resolveFacade, facadeMaterial, ghostMaterial, buildFacade } from './facade.js';
+import { canopyMaterial, plantGreenery, lawnify, waterMaterial, waterDisc } from './greenery.js';
 
 // ============ project ============
 const $ = s => document.querySelector(s);
@@ -106,11 +107,12 @@ const matEdge = new THREE.LineBasicMaterial({ color: 0xa89f90, transparent: true
 const matGhostEdge = new THREE.LineBasicMaterial({ color: 0x6f86a6, transparent: true, opacity: 0.85 });
 const matStone = new THREE.MeshStandardMaterial({ color: 0xe4dac8, roughness: 0.9 });
 const matSand = new THREE.MeshStandardMaterial({ color: 0xd8c39d, roughness: 0.95 });
-const matWater = new THREE.MeshPhysicalMaterial({ color: 0x3f9ec4, roughness: 0.08, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.94 });
+const { material: matWater, texture: waterTex } = waterMaterial(TIER);   // B3: rippled on tiers with waterFps, flat on low
 const matRink = new THREE.MeshPhysicalMaterial({ color: 0xb9d3e6, roughness: 0.12, metalness: 0, clearcoat: 0.8, clearcoatRoughness: 0.1 });
 const matWhite = new THREE.MeshStandardMaterial({ color: 0xf7f3ec, roughness: 0.6 });
 const matTrunk = new THREE.MeshStandardMaterial({ color: 0x7a5a3c, roughness: 1 });
-const matCanopy = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, flatShading: true });
+const matCanopy = canopyMaterial();
+const matHedge = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true });
 
 function bandedMaterial(color, floorH, windows) {
   const m = new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0 });
@@ -176,12 +178,14 @@ const texLoader = new THREE.TextureLoader();
 const groundTex = await texLoader.loadAsync(BASE + (site.plan.ground || 'plan.jpg'));
 groundTex.colorSpace = THREE.SRGBColorSpace;
 groundTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+let groundMat;
 {
   const g = new THREE.ShapeGeometry(shapeFromPlan(site.boundary, wellHoles), 24);
   const c = site.plan.crop, pos = g.attributes.position, uv = new Float32Array(pos.count * 2);
   for (let i = 0; i < pos.count; i++) { const px = pos.getX(i) / mpp + cen[0], py = -pos.getY(i) / mpp + cen[1]; uv[i * 2] = (px - c.x) / c.w; uv[i * 2 + 1] = 1 - (py - c.y) / c.h; }
   g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.rotateX(-Math.PI / 2); g.translate(0, 0, 0);
-  const ground = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1, metalness: 0 }));
+  groundMat = new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1, metalness: 0 });
+  const ground = new THREE.Mesh(g, groundMat);
   ground.receiveShadow = true; world.add(ground);
 }
 
@@ -232,6 +236,7 @@ function courtLines(sport, wM, dM) {
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
 const COURT_COLOR = { tennis: 0x4a86c9, basketball: 0x3e78c4, pickleball: 0x5a8fcf };
+const waterMeshes = [];
 for (const f of features) {
   if (f.kind === 'court') {
     const r = rectM(f); const slab = box(r.w, 0.25, r.d, new THREE.MeshStandardMaterial({ color: COURT_COLOR[f.sport] || 0x4a86c9, roughness: 0.85 }), r.cx, 0.125, r.cz); world.add(slab);
@@ -247,10 +252,10 @@ for (const f of features) {
       const riser = cyl(ro, ro, step, matSand, x, (yTop + yBot) / 2, z, 64, true); riser.material = matSand; riser.material.side = THREE.DoubleSide; world.add(riser);
       const tread = new THREE.Mesh(new THREE.RingGeometry(ri, ro, 64), matSand); tread.rotation.x = -Math.PI / 2; tread.position.set(x, yBot + 0.005, z); tread.receiveShadow = true; world.add(tread);
     }
-    const water = new THREE.Mesh(new THREE.CircleGeometry(Rw, 64), matWater); water.rotation.x = -Math.PI / 2; water.position.set(x, -step * N + 0.06, z); world.add(water);
+    const water = waterDisc(Rw, x, -step * N + 0.06, z, matWater); world.add(water); waterMeshes.push(water);
     const lip = cyl(R0 + 0.5, R0 + 0.5, 0.12, matStone, x, 0.06, z, 64, true); world.add(lip);
   }
-  else if (f.kind === 'splash') { const c = f.circle; world.add(cyl(c.r * mpp, c.r * mpp, 0.08, matWater, toX(c.cx), 0.04, toZ(c.cy), 48));
+  else if (f.kind === 'splash') { const c = f.circle; const w = waterDisc(c.r * mpp, toX(c.cx), 0.08, toZ(c.cy), matWater); world.add(w); waterMeshes.push(w);
     const rim = cyl(c.r * mpp + 0.35, c.r * mpp + 0.35, 0.14, matStone, toX(c.cx), 0.07, toZ(c.cy), 48, true); world.add(rim); }
   else if (f.kind === 'plazaDisc') { const c = f.circle, r = c.r * mpp; world.add(cyl(r, r, 0.22, matStone, toX(c.cx), 0.11, toZ(c.cy), 48)); world.add(cyl(r * 0.55, r * 0.55, 0.42, matStone, toX(c.cx), 0.21, toZ(c.cy), 48)); }
   else if (f.kind === 'portal') { const r = rectM(f), H = 6.5, pw = 3;
@@ -260,41 +265,16 @@ for (const f of features) {
     const d = new THREE.Mesh(new THREE.SphereGeometry(r * 0.9, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), matWhite); d.position.set(toX(c.cx), 0.4, toZ(c.cy)); d.castShadow = true; world.add(d); }
 }
 
-// ---- trees: sampled from the plan's dark greens, thinned, kept off footprints ----
-function plantTrees() {
-  const img = groundTex.image, W = 640, H = Math.round(W * img.height / img.width);
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, W, H);
-  const data = g.getImageData(0, 0, W, H).data, c = site.plan.crop;
-  const stepPx = 2.4 / mpp, cell = 3.0, taken = new Map(), pts = [];
-  const blocked = [...site.volumes.map(v => ({ polygon: v.polygon })), ...features];
-  const isBlocked = (px, py) => blocked.some(f => f.polygon ? pointInPoly([px, py], f.polygon) : f.rect ? (px >= f.rect[0] - 2 && px <= f.rect[2] + 2 && py >= f.rect[1] - 2 && py <= f.rect[3] + 2)
-    : f.circle ? Math.hypot(px - f.circle.cx, py - f.circle.cy) <= f.circle.r + 2 : f.ellipse ? ((px - f.ellipse.cx) ** 2) / (f.ellipse.rx + 2) ** 2 + ((py - f.ellipse.cy) ** 2) / (f.ellipse.ry + 2) ** 2 <= 1 : false);
-  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let py = c.y; py < c.y + c.h; py += stepPx) for (let px = c.x; px < c.x + c.w; px += stepPx) {
-    const jx = px + (rnd() - 0.5) * stepPx, jy = py + (rnd() - 0.5) * stepPx;
-    const ix = Math.floor((jx - c.x) / c.w * W), iy = Math.floor((jy - c.y) / c.h * H); if (ix < 0 || iy < 0 || ix >= W || iy >= H) continue;
-    const i = (iy * W + ix) * 4, r = data[i], gg = data[i + 1], b = data[i + 2];
-    if (!(gg > r + 18 && gg > b + 28 && gg < 168 && r < 150)) continue;      // dark saturated green = canopy/hedge, not lawn
-    if (!pointInPoly([jx, jy], site.boundary) || isBlocked(jx, jy)) continue;
-    const x = toX(jx), z = toZ(jy), gx = Math.floor(x / cell), gz = Math.floor(z / cell); let near = false;
-    for (let dx = -1; dx <= 1 && !near; dx++) for (let dz = -1; dz <= 1; dz++) { const k = taken.get((gx + dx) + ',' + (gz + dz)); if (k && Math.hypot(k[0] - x, k[1] - z) < cell) { near = true; break; } }
-    if (near) continue;
-    taken.set(gx + ',' + gz, [x, z]); pts.push({ x, z, s: 0.75 + rnd() * 0.7, h: 1.1 + rnd() * 1.1, c: rnd(), rot: rnd() * Math.PI * 2 });
-  }
-  const canopyG = new THREE.IcosahedronGeometry(1.9, 1), trunkG = new THREE.CylinderGeometry(0.11, 0.17, 1, 6);
-  const canopies = new THREE.InstancedMesh(canopyG, matCanopy, pts.length), trunks = new THREE.InstancedMesh(trunkG, matTrunk, pts.length);
-  const m = new THREE.Matrix4(), col = new THREE.Color(), pal = [0x5f8f4a, 0x6f9b52, 0x4e7f3e, 0x7ea65c, 0x5a8a45];
-  pts.forEach((p, i) => {
-    m.compose(new THREE.Vector3(p.x, p.h + 1.5 * p.s, p.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, p.rot, 0)), new THREE.Vector3(p.s, p.s * 0.9, p.s)); canopies.setMatrixAt(i, m);
-    canopies.setColorAt(i, col.setHex(pal[Math.floor(p.c * pal.length)]).offsetHSL(0, 0, (p.c - 0.5) * 0.08));
-    m.compose(new THREE.Vector3(p.x, p.h / 2, p.z), new THREE.Quaternion(), new THREE.Vector3(1, p.h, 1)); trunks.setMatrixAt(i, m);
-  });
-  canopies.castShadow = true; canopies.receiveShadow = true; trunks.castShadow = false;
-  world.add(canopies); world.add(trunks);
-  return pts.length;
-}
-const treeCount = plantTrees();
+// ---- greenery: trees, hedges and lawn read from the plan's greens (viewer/greenery.js). Sampled from plan.sampleImage so an AI ground (B5) never feeds the sampler. ----
+const sampleSrc = site.plan.sampleImage || 'plan.jpg', groundSrc = site.plan.ground || 'plan.jpg';
+const sampleImg = sampleSrc === groundSrc ? groundTex.image : (await texLoader.loadAsync(BASE + sampleSrc)).image;
+const blocked = [...site.volumes.map(v => ({ polygon: v.polygon })), ...features];
+const isBlocked = (px, py) => blocked.some(f => f.polygon ? pointInPoly([px, py], f.polygon) : f.rect ? (px >= f.rect[0] - 2 && px <= f.rect[2] + 2 && py >= f.rect[1] - 2 && py <= f.rect[3] + 2)
+  : f.circle ? Math.hypot(px - f.circle.cx, py - f.circle.cy) <= f.circle.r + 2 : f.ellipse ? ((px - f.ellipse.cx) ** 2) / (f.ellipse.rx + 2) ** 2 + ((py - f.ellipse.cy) ** 2) / (f.ellipse.ry + 2) ** 2 <= 1 : false);
+const greenery = plantGreenery(site, sampleImg, { toX, toZ, mpp, pointInPoly, isBlocked, tier: TIER, mats: { canopy: matCanopy, trunk: matTrunk, hedge: matHedge } });
+for (const im of greenery.treeMeshes) world.add(im); world.add(greenery.trunks); world.add(greenery.hedgeMesh);
+if (greenery.lawnTexture) { lawnify(groundMat, greenery.lawnTexture); groundMat.needsUpdate = true; }
+const treeCount = greenery.trees;
 
 // ============ camera helpers ============
 const sph = new THREE.Spherical();
@@ -493,6 +473,12 @@ function resize() {
   else { camera.aspect = (w + PANEL_W) / h; camera.setViewOffset(w + PANEL_W, h, PANEL_W, 0, w, h); }
   camera.updateProjectionMatrix();
 }
+const frustum = new THREE.Frustum(), pvm = new THREE.Matrix4();
+function waterInView() {   // B3: ripples cost frames only while a pool is near and on screen (matrixWorldInverse is from the last render; a moving camera is dirty anyway)
+  if (!TIER.waterFps || !waterMeshes.length) return false;
+  frustum.setFromProjectionMatrix(pvm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+  return waterMeshes.some(w => camera.position.distanceTo(w.position) < 260 && frustum.intersectsObject(w));
+}
 let lastT = performance.now(), dirty = true, dirtyUntil = performance.now() + 3000, lastRender = 0;
 controls.addEventListener('change', () => { dirty = true; });
 window.addEventListener('resize', () => { lastSize = ''; dirty = true; });
@@ -501,8 +487,9 @@ renderer.setAnimationLoop(now => {
   resize(); stepTween(now); stepTour(dt);
   if (Math.abs(lightTarget - lightK) > 0.001) { lightK += Math.sign(lightTarget - lightK) * Math.min(Math.abs(lightTarget - lightK), dt / 1.2); applyLighting(lightK); dirty = true; }
   if (controls.enabled && controls.update()) dirty = true;
+  const water = waterInView(); if (water) waterTex.offset.set(now * 0.000012, now * 0.000007);   // ≈0.5 m/s drift across the 38.4 m tile
   const animating = !!tween || (tour && !tour.paused) || ring.visible || now < dirtyUntil;
-  if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < 90) return; }   // idle: ~11 fps keeps the compositor fed without draining the battery
+  if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < (water ? 1000 / TIER.waterFps : 90)) return; }   // idle: ~11 fps keeps the compositor fed; TIER.waterFps while a pool is on screen
   dirty = false; lastRender = now;
   renderer.info.reset();
   updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
@@ -510,4 +497,5 @@ renderer.setAnimationLoop(now => {
 
 window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
   quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP, facades: facadeInfo,
+  greenery: { trees: greenery.trees, hedges: greenery.hedges, variants: greenery.variants, lawn: !!greenery.lawnTexture, water: !!waterTex }, hedgeCount: greenery.hedges, waterMeshes,
   stats: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length, textures: renderer.info.memory.textures }) };
