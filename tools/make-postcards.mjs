@@ -1,13 +1,12 @@
 // Build <project>/postcards/: copies developer renders, cuts a 3:2 plan-detail crop for EVERY hotspot, writes manifest.json.
+// Owns the developer|plan entries; every other kind (ai, ai-video, video, embed) is kept and the lists are re-sorted by provenance (tools/media-lib.mjs).
 // usage: node tools/make-postcards.mjs projects/<slug>
 import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path';
+import { readManifest, writeManifest, mergeOwned, countByKind } from './media-lib.mjs';
 const proj = process.argv[2]; const site = JSON.parse(fs.readFileSync(path.join(proj, 'site.json'), 'utf8'));
 const out = path.join(proj, 'postcards'); fs.mkdirSync(out, { recursive: true });
-const existing = fs.existsSync(path.join(out, 'manifest.json')) ? JSON.parse(fs.readFileSync(path.join(out, 'manifest.json'), 'utf8')) : { images: {} };
-const manifest = { images: {} };
-const push = (id, entry) => { (manifest.images[id] ||= []); if (!manifest.images[id].some(e => e.file === entry.file)) manifest.images[id].push(entry); };
-// 1. keep any AI entries already selected (day 5 adds them; re-running this tool must not drop them)
-for (const [id, list] of Object.entries(existing.images || {})) for (const e of list) if (e.kind === 'ai') push(id, e);
+const existing = readManifest(out), built = {};
+const push = (id, entry) => { (built[id] ||= []); built[id].push(entry); };
 // 2. developer renders
 for (const r of site.developerRenders || []) {
   const dst = 'dev-' + path.basename(r.file); fs.copyFileSync(path.join(proj, r.file), path.join(out, dst));
@@ -29,6 +28,5 @@ for (const h of site.hotspots) {
   push(h.id, { file, kind: 'plan', credit: 'Master plan detail' });
 }
 await b.close();
-fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-const counts = Object.values(manifest.images).flat().reduce((a, e) => (a[e.kind] = (a[e.kind] || 0) + 1, a), {});
-console.log('postcards:', Object.keys(manifest.images).length, 'hotspots;', JSON.stringify(counts));
+const manifest = mergeOwned(existing, ['developer', 'plan'], built); writeManifest(out, manifest);
+console.log('postcards:', Object.keys(manifest.images).length, 'hotspots;', JSON.stringify(countByKind(manifest)));
