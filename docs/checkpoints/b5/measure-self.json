@@ -1,0 +1,714 @@
+{
+ "edges": [
+  {
+   "kind": "boundary",
+   "id": "boundary",
+   "i": 0,
+   "n": 135,
+   "confident": 135,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "boundary",
+   "id": "boundary",
+   "i": 1,
+   "n": 198,
+   "confident": 198,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "boundary",
+   "id": "boundary",
+   "i": 2,
+   "n": 95,
+   "confident": 94,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "boundary",
+   "id": "boundary",
+   "i": 3,
+   "n": 198,
+   "confident": 198,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-a",
+   "i": 0,
+   "n": 21,
+   "confident": 21,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-a",
+   "i": 1,
+   "n": 36,
+   "confident": 36,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-a",
+   "i": 2,
+   "n": 21,
+   "confident": 21,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-a",
+   "i": 3,
+   "n": 36,
+   "confident": 36,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-b",
+   "i": 0,
+   "n": 24,
+   "confident": 24,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-b",
+   "i": 1,
+   "n": 38,
+   "confident": 38,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-b",
+   "i": 2,
+   "n": 24,
+   "confident": 24,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "tower-b",
+   "i": 3,
+   "n": 38,
+   "confident": 38,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-1",
+   "i": 0,
+   "n": 19,
+   "confident": 19,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-1",
+   "i": 1,
+   "n": 33,
+   "confident": 33,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-1",
+   "i": 2,
+   "n": 19,
+   "confident": 19,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-1",
+   "i": 3,
+   "n": 33,
+   "confident": 33,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-2",
+   "i": 0,
+   "n": 23,
+   "confident": 23,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-2",
+   "i": 1,
+   "n": 39,
+   "confident": 39,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-2",
+   "i": 2,
+   "n": 23,
+   "confident": 23,
+   "median": -1,
+   "mad": 1,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-2",
+   "i": 3,
+   "n": 39,
+   "confident": 39,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-3",
+   "i": 0,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-3",
+   "i": 1,
+   "n": 39,
+   "confident": 39,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-3",
+   "i": 2,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "future-3",
+   "i": 3,
+   "n": 39,
+   "confident": 39,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "clubhouse",
+   "i": 0,
+   "n": 23,
+   "confident": 23,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "clubhouse",
+   "i": 1,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "clubhouse",
+   "i": 2,
+   "n": 22,
+   "confident": 22,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "clubhouse",
+   "i": 3,
+   "n": 24,
+   "confident": 24,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-n",
+   "i": 0,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-n",
+   "i": 1,
+   "n": 5,
+   "confident": 5,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-n",
+   "i": 2,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-n",
+   "i": 3,
+   "n": 5,
+   "confident": 5,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-s",
+   "i": 0,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-s",
+   "i": 1,
+   "n": 7,
+   "confident": 7,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-s",
+   "i": 2,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 5.5,
+   "weak": false
+  },
+  {
+   "kind": "volume",
+   "id": "services-s",
+   "i": 3,
+   "n": 7,
+   "confident": 7,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "pickleball",
+   "i": 0,
+   "n": 11,
+   "confident": 11,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "pickleball",
+   "i": 1,
+   "n": 13,
+   "confident": 13,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "pickleball",
+   "i": 2,
+   "n": 11,
+   "confident": 11,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "pickleball",
+   "i": 3,
+   "n": 13,
+   "confident": 13,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "multipurpose",
+   "i": 0,
+   "n": 22,
+   "confident": 22,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "multipurpose",
+   "i": 1,
+   "n": 12,
+   "confident": 12,
+   "median": 0,
+   "mad": 1.5,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "multipurpose",
+   "i": 2,
+   "n": 22,
+   "confident": 22,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "multipurpose",
+   "i": 3,
+   "n": 12,
+   "confident": 12,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "tennis",
+   "i": 0,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "tennis",
+   "i": 1,
+   "n": 12,
+   "confident": 12,
+   "median": 0,
+   "mad": 0.5,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "tennis",
+   "i": 2,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "tennis",
+   "i": 3,
+   "n": 12,
+   "confident": 12,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "stepped-well",
+   "i": 0,
+   "n": 49,
+   "confident": 49,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "splash",
+   "i": 0,
+   "n": 30,
+   "confident": 30,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "plaza-1",
+   "i": 0,
+   "n": 27,
+   "confident": 27,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "plaza-2",
+   "i": 0,
+   "n": 27,
+   "confident": 27,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "plaza-3",
+   "i": 0,
+   "n": 27,
+   "confident": 27,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "portal",
+   "i": 0,
+   "n": 32,
+   "confident": 32,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "portal",
+   "i": 1,
+   "n": 5,
+   "confident": 5,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "portal",
+   "i": 2,
+   "n": 32,
+   "confident": 32,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "portal",
+   "i": 3,
+   "n": 5,
+   "confident": 5,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "dome-1",
+   "i": 0,
+   "n": 17,
+   "confident": 17,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "circle",
+   "id": "dome-2",
+   "i": 0,
+   "n": 14,
+   "confident": 14,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-n",
+   "i": 0,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-n",
+   "i": 1,
+   "n": 5,
+   "confident": 5,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-n",
+   "i": 2,
+   "n": 25,
+   "confident": 25,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-n",
+   "i": 3,
+   "n": 5,
+   "confident": 5,
+   "median": 3,
+   "mad": 5,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-s",
+   "i": 0,
+   "n": 7,
+   "confident": 7,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-s",
+   "i": 1,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 1,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-s",
+   "i": 2,
+   "n": 7,
+   "confident": 7,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  },
+  {
+   "kind": "court",
+   "id": "ramp-s",
+   "i": 3,
+   "n": 26,
+   "confident": 26,
+   "median": 0,
+   "mad": 0,
+   "weak": false
+  }
+ ],
+ "count": 67,
+ "over6": 0,
+ "weak": 0,
+ "worst": 3,
+ "byKind": {
+  "boundary": {
+   "n": 4,
+   "over6": 0,
+   "weak": 0,
+   "worst": 0
+  },
+  "volume": {
+   "n": 32,
+   "over6": 0,
+   "weak": 0,
+   "worst": 1
+  },
+  "court": {
+   "n": 24,
+   "over6": 0,
+   "weak": 0,
+   "worst": 3
+  },
+  "circle": {
+   "n": 7,
+   "over6": 0,
+   "weak": 0,
+   "worst": 0
+  }
+ },
+ "band": 10,
+ "range": 12,
+ "step": 4,
+ "minNcc": 0.3,
+ "rect": {
+  "x": 40,
+  "y": 20,
+  "w": 620,
+  "h": 828
+ }
+}

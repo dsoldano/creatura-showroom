@@ -39,6 +39,12 @@
   <div class="row"><button id="btnLoad">Load URLs</button><button id="btnFit">Fit view</button></div>
   <label>…or pick files <input type="file" id="fileImg" accept="image/*"> <input type="file" id="fileJson" accept=".json"></label>
 
+  <h2>Overlay <span class="muted">(<kbd>o</kbd> blinks)</span></h2>
+  <label>Second image URL <input type="text" id="img2Url" placeholder="../projects/x/source/ai-ground-1.png"></label>
+  <div class="row"><label>Fit <select id="img2Fit"><option value="frame">plan frame</option><option value="crop">plan crop</option></select></label><button id="btnImg2">Load overlay</button></div>
+  <label>Alpha <input type="range" id="img2Alpha" min="0" max="1" step="0.05" value="0.5"></label>
+  <div class="muted" id="img2Info">no overlay</div>
+
   <h2>Mode <span class="muted">(<kbd>v</kbd> <kbd>h</kbd> <kbd>p</kbd> <kbd>r</kbd> <kbd>c</kbd> <kbd>m</kbd>)</span></h2>
   <div class="row">
     <button data-mode="select" class="on">Select</button><button data-mode="pan">Pan</button><button data-mode="polygon">Polygon</button>
@@ -70,6 +76,8 @@
   const $ = s => document.querySelector(s);
   const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage'), hud = $('#hud');
   let img = null, state = emptyState(), view = { s: 1, tx: 0, ty: 0 };
+  let img2 = null; const overlay = { src: '', alpha: 0.5, fit: 'frame', dx: 0, dy: 0, loaded: false, blink: false };   // second image (an AI ground candidate) drawn over the plan
+  function overlayRect() { const c = overlay.fit === 'crop' && state.plan.crop ? state.plan.crop : { x: 0, y: 0, w: state.plan.width || (img && img.width) || 0, h: state.plan.height || (img && img.height) || 0 }; return { x: c.x + overlay.dx, y: c.y + overlay.dy, w: c.w, h: c.h }; }
   let mode = 'select', sel = null, drag = null, draft = null, spaceDown = false, mouse = { x: 0, y: 0 };
 
   function emptyState() {
@@ -105,6 +113,7 @@
     ctx.save(); ctx.translate(view.tx, view.ty); ctx.scale(view.s, view.s);
     ctx.imageSmoothingEnabled = view.s < 2;
     ctx.drawImage(img, 0, 0);
+    if (img2 && overlay.loaded) { const r = overlayRect(), a = overlay.blink ? 0 : overlay.alpha; if (a > 0) { ctx.save(); ctx.globalAlpha = a; ctx.drawImage(img2, r.x, r.y, r.w, r.h); ctx.restore(); } }
     const lw = 1 / view.s;
     // crop
     if (state.plan.crop) { const c = state.plan.crop; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([6 * lw, 4 * lw]); ctx.lineWidth = lw; ctx.strokeRect(c.x, c.y, c.w, c.h); ctx.setLineDash([]); }
@@ -204,6 +213,7 @@
     if (e.key === 'Enter' && draft && draft.type === 'polygon') closePolygon();
     if (e.key === 'Escape') { draft = null; sel = null; syncSel(); draw(); }
     if (e.key === 'Delete' || e.key === 'Backspace') deleteSel();
+    if (e.key === 'o') { overlay.blink = !overlay.blink; draw(); }
     const m = { v: 'select', h: 'pan', p: 'polygon', r: 'rect', c: 'circle', m: 'pin' }[e.key]; if (m) setMode(m);
   });
   window.addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
@@ -253,13 +263,57 @@
   $('#btnLoad').onclick = () => loadUrls($('#imgUrl').value.trim(), $('#jsonUrl').value.trim()).catch(e => alert('Load failed: ' + e.message));
   $('#fileImg').onchange = async e => { const f = e.target.files[0]; if (f) { img = await loadImage(URL.createObjectURL(f)); state.plan.width = img.width; state.plan.height = img.height; fit(); } };
   $('#fileJson').onchange = async e => { const f = e.target.files[0]; if (f) { state = Object.assign(emptyState(), JSON.parse(await f.text())); sel = null; syncSel(); syncList(); draw(); } };
+  async function setOverlay(o = {}) {
+    Object.assign(overlay, o); if (overlay.src) { img2 = await loadImage(overlay.src); overlay.loaded = true; } else { img2 = null; overlay.loaded = false; }
+    $('#img2Url').value = overlay.src; $('#img2Alpha').value = overlay.alpha; $('#img2Fit').value = overlay.fit;
+    $('#img2Info').textContent = overlay.loaded ? `${img2.width}×${img2.height} → ${overlay.fit}${overlay.dx || overlay.dy ? ` +(${overlay.dx},${overlay.dy})` : ''}` : 'no overlay'; draw();
+  }
+  $('#btnImg2').onclick = () => setOverlay({ src: $('#img2Url').value.trim(), fit: $('#img2Fit').value }).catch(e => alert('Overlay failed: ' + e.message));
+  $('#img2Alpha').oninput = e => { overlay.alpha = +e.target.value; draw(); };
+  $('#img2Fit').onchange = e => { overlay.fit = e.target.value; draw(); };
   window.addEventListener('resize', resize);
   resize();
   const q = new URLSearchParams(location.search);
   if (q.get('img')) $('#imgUrl').value = q.get('img');
   if (q.get('json')) $('#jsonUrl').value = q.get('json');
   if (q.get('img') || q.get('json')) loadUrls(q.get('img') || '', q.get('json') || '').catch(e => alert('Load failed: ' + e.message));
-  window.__tracer = { get state() { return state; }, get view() { return view; }, fit, draw, setView(v) { Object.assign(view, v); draw(); } };
+  if (q.get('img2')) setOverlay({ src: q.get('img2'), alpha: +(q.get('img2alpha') || 0.5), fit: q.get('img2fit') || 'frame', dx: +(q.get('img2dx') || 0), dy: +(q.get('img2dy') || 0) }).catch(e => alert('Overlay failed: ' + e.message));
+
+  // ---------- overlay measurement: for every traced edge, where does the PLAN's edge profile reappear in the overlay? ----------
+  // Along each edge's normal, the plan and the overlay give a gradient-magnitude profile; normalised cross-correlation over shifts ±range finds the
+  // offset (plan px) at which they align. Sign-agnostic (a photo's brightness step vs a drawing's ink line), immune to neighbouring lines.
+  function measureOverlay({ band = 10, range = 12, step = 4, minNcc = 0.3 } = {}) {
+    if (!img2 || !overlay.loaded) throw new Error('no overlay loaded');
+    const W = state.plan.width, H = state.plan.height, r = overlayRect();
+    const lumaOf = (paint) => { const oc = document.createElement('canvas'); oc.width = W; oc.height = H; const g = oc.getContext('2d', { willReadFrequently: true }); g.fillStyle = '#000'; g.fillRect(0, 0, W, H); paint(g);
+      const d = g.getImageData(0, 0, W, H).data, L = new Float32Array(W * H); for (let i = 0; i < W * H; i++) L[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; return L; };
+    const Lp = lumaOf(g => g.drawImage(img, 0, 0, W, H)), Lo = lumaOf(g => g.drawImage(img2, r.x, r.y, r.w, r.h));
+    const at = (L, x, y) => { const xi = Math.round(x), yi = Math.round(y); return xi < 0 || yi < 0 || xi >= W || yi >= H ? 0 : L[yi * W + xi]; };
+    const median = a => { const s = [...a].sort((p, q) => p - q); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : NaN; };
+    // gradient-magnitude profile along the normal, t ∈ [-(band+range) .. band+range]
+    const profile = (L, px, py, nx, ny) => { const ext = band + range, out = new Float32Array(2 * ext + 1); for (let t = -ext; t <= ext; t++) out[t + ext] = Math.abs(at(L, px + nx * (t + 1), py + ny * (t + 1)) - at(L, px + nx * (t - 1), py + ny * (t - 1))); return out; };
+    const align = (px, py, nx, ny) => {   // → { s, ncc } best shift of the overlay profile against the plan profile
+      const ext = band + range, gp = profile(Lp, px, py, nx, ny), go = profile(Lo, px, py, nx, ny);
+      let pp = 0; for (let t = -band; t <= band; t++) pp += gp[t + ext] ** 2; if (pp < 1e-6) return null;   // the plan has no edge here: nothing to align
+      let best = -2, bs = 0;
+      for (let sft = -range; sft <= range; sft++) { let dot = 0, oo = 0; for (let t = -band; t <= band; t++) { const o = go[t + sft + ext]; dot += gp[t + ext] * o; oo += o * o; } const ncc = oo < 1e-6 ? 0 : dot / Math.sqrt(pp * oo); if (ncc > best) { best = ncc; bs = sft; } }
+      return { s: bs, ncc: best };
+    };
+    const edges = [];
+    const finish = (kind, id, i, hits, abs = false) => { const ok = hits.filter(h => h && h.ncc >= minNcc).map(h => abs ? Math.abs(h.s) : h.s), m = median(ok);   // circles: unsigned (a shifted circle's radial offsets are ±d·cosθ and would cancel)
+      edges.push({ kind, id, i, n: hits.length, confident: ok.length, median: ok.length ? m : null, mad: ok.length ? median(ok.map(t => Math.abs(t - m))) : null, weak: ok.length < Math.max(3, hits.length * 0.3) }); };
+    const segment = (kind, id, i, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy); if (len < 8) return; const nx = -dy / len, ny = dx / len, hits = [];
+      for (let s = 3; s <= len - 3; s += step) { const u = s / len; hits.push(align(a[0] + dx * u, a[1] + dy * u, nx, ny)); } finish(kind, id, i, hits); };
+    const polygon = (kind, id, pts) => pts.forEach((p, i) => segment(kind, id, i, p, pts[(i + 1) % pts.length]));
+    const circle = (kind, id, cx, cy, rad) => { const hits = [], n = Math.max(12, Math.round(2 * Math.PI * rad / step)); for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, nx = Math.cos(a), ny = Math.sin(a); hits.push(align(cx + nx * rad, cy + ny * rad, nx, ny)); } finish(kind, id, 0, hits, true); };
+    if (state.boundary.length) polygon('boundary', 'boundary', state.boundary);
+    state.volumes.forEach(v => polygon('volume', v.id, v.polygon));
+    state.features.forEach(f => { if (f.rect) { const [x0, y0, x1, y1] = f.rect; polygon('court', f.id, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]); } else if (f.circle) circle('circle', f.id, f.circle.cx, f.circle.cy, f.circle.r); else if (f.polygon) polygon('feature', f.id, f.polygon); });
+    const off = e => e.weak ? Infinity : Math.abs(e.median);   // an edge the overlay does not reproduce at all counts as failed
+    const byKind = {}; for (const e of edges) { const k = byKind[e.kind] || (byKind[e.kind] = { n: 0, over6: 0, weak: 0, worst: 0 }); k.n++; if (e.weak) k.weak++; if (off(e) > 6) k.over6++; if (!e.weak) k.worst = Math.max(k.worst, Math.abs(e.median)); }
+    return { edges, count: edges.length, over6: edges.filter(e => off(e) > 6).length, weak: edges.filter(e => e.weak).length, worst: Math.max(0, ...edges.filter(e => !e.weak).map(e => Math.abs(e.median))), byKind, band, range, step, minNcc, rect: r };
+  }
+  window.__tracer = { get state() { return state; }, get view() { return view; }, fit, draw, setView(v) { Object.assign(view, v); draw(); }, setOverlay, get overlay() { return { ...overlay }; }, measureOverlay };
 })();
 </script>
 </body>
