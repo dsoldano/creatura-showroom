@@ -49,9 +49,10 @@ if (state) {
 // ---- quality tiers: each boots as itself, keeps the flicker contract (opaque canvas = clear alpha 1, log depth, plinth cap -0.3), stays under its draw budget, compiles every shader ----
 const CEIL = { low: [120, 200000], mid: [140, 300000], high: [220, 700000] };   // [draw calls, triangles] per WHOLE frame incl. the shadow pass (B1 baseline 87 / 98k); recalibrate when a sub-phase adds geometry
 const WANT_ENV = { low: false, mid: true, high: true };
+const WANT_LOG = { low: true, mid: true, high: false }, WANT_POST = { low: false, mid: false, high: true };   // B4: high renders through the GTAO composer with linear depth; phones keep log depth (flicker fix)
 const WANT_G = { low: { variants: 1, lawn: false, water: false }, mid: { variants: 3, lawn: true, water: true }, high: { variants: 3, lawn: true, water: true } };   // B3 greenery per tier (viewer/quality.js)
 const tierFacts = () => { const w = window.__walk; if (!w) return null;
-  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY, greenery: w.greenery }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
+  return { quality: w.quality, logDepth: w.renderer.capabilities.logarithmicDepthBuffer, clearAlpha: w.renderer.getClearAlpha(), env: !!w.scene.environment, stats: w.stats(), plinthTopY: w.plinthTopY, greenery: w.greenery, post: w.post.enabled, shadowMapSize: w.sun.shadow.mapSize.x, fitHalf: w.shadowFit && w.shadowFit.half }; };   // r170 always creates the context with alpha:true; the renderer's alpha:false is a clear alpha of 1
 const facts = { low: state ? await p.evaluate(tierFacts) : null };
 for (const tier of ['mid', 'high']) {
   const pg = await ctx.newPage(); wire(pg);
@@ -62,8 +63,8 @@ for (const tier of ['mid', 'high']) {
 }
 for (const tier of ['low', 'mid', 'high']) {
   const f = facts[tier] && !facts[tier].failed ? facts[tier] : null; const why = facts[tier] && facts[tier].failed ? JSON.stringify(facts[tier]) : '';
-  ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth on, opaque canvas, plinth cap -0.3, ${WANT_G[tier].variants} canopy variant(s), lawn ${WANT_G[tier].lawn ? 'on' : 'off'}, water ${WANT_G[tier].water ? 'rippled' : 'flat'})`,
-    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === true && f.clearAlpha === 1 && f.plinthTopY === -0.3 && !!f.greenery && f.greenery.hedges >= 100 && f.greenery.variants === WANT_G[tier].variants && f.greenery.lawn === WANT_G[tier].lawn && f.greenery.water === WANT_G[tier].water, f ? JSON.stringify(f) : why);
+  ok(`tier ${tier} boots as itself (env map ${WANT_ENV[tier] ? 'on' : 'off'}, log depth ${WANT_LOG[tier] ? 'on' : 'off'}, AO pass ${WANT_POST[tier] ? 'on' : 'off'}, ${[4096, 2048, 1024][['high', 'mid', 'low'].indexOf(tier)]} shadow map, opaque canvas, plinth cap -0.3, ${WANT_G[tier].variants} canopy variant(s), lawn ${WANT_G[tier].lawn ? 'on' : 'off'}, water ${WANT_G[tier].water ? 'rippled' : 'flat'})`,
+    !!f && f.quality === tier && f.env === WANT_ENV[tier] && f.logDepth === WANT_LOG[tier] && f.post === WANT_POST[tier] && f.shadowMapSize === [4096, 2048, 1024][['high', 'mid', 'low'].indexOf(tier)] && f.clearAlpha === 1 && f.plinthTopY === -0.3 && !!f.greenery && f.greenery.hedges >= 100 && f.greenery.variants === WANT_G[tier].variants && f.greenery.lawn === WANT_G[tier].lawn && f.greenery.water === WANT_G[tier].water, f ? JSON.stringify(f) : why);
   ok(`tier ${tier} draw budget (≤${CEIL[tier][0]} calls, ≤${CEIL[tier][1]} tris)`, !!f && f.stats.calls > 0 && f.stats.calls <= CEIL[tier][0] && f.stats.triangles <= CEIL[tier][1], f ? JSON.stringify(f.stats) : 'no facts');
 }
 ok('no shader compile errors on any tier', !errs.some(e => /Shader Error|WebGLProgram|WebGLShader|GLSL/i.test(e)), errs.filter(e => /Shader|GLSL/i.test(e)).slice(0, 3).join(' | '));

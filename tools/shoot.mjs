@@ -20,7 +20,7 @@ for (const [name, vp] of Object.entries(sizes)) {
   const stats = await p.evaluate(() => {
     const w = window.__walk; if (!w) return null;
     const info = w.renderer.info; const c = document.getElementById('gl');
-    return { calls: info.render.calls, tris: info.render.triangles, canvas: [c.width, c.height], cam: w.camera.position.toArray().map(v => +v.toFixed(0)) };
+    return { calls: info.render.calls, tris: info.render.triangles, canvas: [c.width, c.height], cam: w.camera.position.toArray().map(v => +v.toFixed(0)), quality: w.quality, post: !!(w.post && w.post.enabled), autoTier: w.autoTier ? w.autoTier.decided : null };
   });
   console.log(name, out, JSON.stringify(stats), errs.length ? '\n  ' + errs.join('\n  ') : 'no console errors');
   if (errs.length) failed = true;

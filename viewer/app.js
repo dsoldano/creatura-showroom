@@ -5,6 +5,9 @@ import { TIERS, resolveQuality } from './quality.js';
 import { createSky } from './sky.js';
 import { resolveFacade, facadeMaterial, ghostMaterial, buildFacade } from './facade.js';
 import { canopyMaterial, plantGreenery, lawnify, waterMaterial, waterDisc } from './greenery.js';
+import { lightBasis, fitShadow } from './post-math.js';
+import { buildGroundAO } from './ground-ao.js';
+import { createPost } from './post.js';
 
 // ============ project ============
 const $ = s => document.querySelector(s);
@@ -29,20 +32,22 @@ const features = site.features || [];
 
 // ============ renderer / scene / camera ============
 const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: TIER.alpha || FX.has('alpha'), powerPreference: 'high-performance', logarithmicDepthBuffer: TIER.logDepth && !FX.has('nolog') });
+const LOG_DEPTH = !FX.has('nolog') && (TIER.logDepth || FX.has('log'));   // ?fx=log: log depth on high (the AO pass then stays off — it reconstructs positions from linear depth)
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: TIER.alpha || FX.has('alpha'), powerPreference: 'high-performance', logarithmicDepthBuffer: LOG_DEPTH });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, TIER.dpr));
 renderer.info.autoReset = false;   // reset once per rendered frame in the loop so __walk.stats() reports whole frames
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;   // B4: exactly one shadow pass per frame, requested by post.render()
 const labelRenderer = new CSS2DRenderer({ element: document.getElementById('labels') });
 let lastSize = '';
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xece7de, 900, 2000);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 2, 3600);
+const camera = new THREE.PerspectiveCamera(42, 1, TIER.near, 3600);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = COARSE ? 0.1 : 0.06;
 controls.minDistance = 60; controls.maxDistance = 900;
@@ -69,7 +74,7 @@ const sky = skyCtl.mesh; sky.visible = !FX.has('alpha'); scene.add(sky);   // ?f
 const hemi = new THREE.HemisphereLight(0xdfe9ff, 0xc2b49a, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1dc, 2.0);
 sun.castShadow = true; sun.shadow.mapSize.set(TIER.shadowMap, TIER.shadowMap);
-{ const sc = sun.shadow.camera, R = Math.max(siteW, siteD) * 0.9; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 50; sc.far = 1400; }
+{ const sc = sun.shadow.camera; sc.left = -320; sc.right = 320; sc.top = 320; sc.bottom = -320; sc.near = 50; sc.far = 1400; }   // box refitted to the view every frame by fitShadowToView()
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun); scene.add(sun.target);
 
@@ -94,6 +99,23 @@ function applyLighting(k, force = false) {   // the single day/dusk choke point:
   scene.environment = skyCtl.environment(k, lerpSky, force); scene.environmentIntensity = L(a.env, b.env, k) * skyCtl.intensityScale(k);
   for (const sh of bandedShaders) sh.uniforms.uDusk.value = k;
   document.getElementById('sky').style.opacity = FX.has('alpha') ? k.toFixed(3) : '0';
+}
+
+// ---- fitted shadow frustum (B4): the ortho box covers only the ground in view, fitted and texel-snapped in light space (viewer/post-math.js) ----
+const NDC_CORNERS = [[-1, -1], [1, -1], [1, 1], [-1, 1]], fitNear = new THREE.Vector3(), fitFar = new THREE.Vector3(), fitDir = new THREE.Vector3();
+let shadowFit = null;
+function fitShadowToView() {
+  camera.updateMatrixWorld();
+  const hits = [[controls.target.x, controls.target.z]];
+  for (const [x, y] of NDC_CORNERS) {
+    fitNear.set(x, y, -1).unproject(camera); fitFar.set(x, y, 1).unproject(camera);
+    const dy = fitFar.y - fitNear.y; if (Math.abs(dy) < 1e-6) continue; const t = -fitNear.y / dy; if (t < 0) continue; const s = Math.min(t, 1);   // corner ray ∩ y=0 (rays that never reach the ground use their far point; clampHits fences them)
+    hits.push([fitNear.x + (fitFar.x - fitNear.x) * s, fitNear.z + (fitFar.z - fitNear.z) * s]);
+  }
+  sunDirAt(lightK, fitDir);
+  shadowFit = fitShadow(hits, bounds, { pad: 40, mapSize: TIER.shadowMap, basis: lightBasis([fitDir.x, fitDir.y, fitDir.z]), prevHalf: shadowFit && shadowFit.half });
+  sun.target.position.fromArray(shadowFit.centre); sun.position.copy(sun.target.position).addScaledVector(fitDir, 700); sun.target.updateMatrixWorld();
+  const sc = sun.shadow.camera; if (sc.right !== shadowFit.half) { sc.left = -shadowFit.half; sc.right = shadowFit.half; sc.top = shadowFit.half; sc.bottom = -shadowFit.half; sc.updateProjectionMatrix(); }
 }
 
 // ============ materials ============
@@ -207,7 +229,7 @@ for (const v of site.volumes) {
   }
   else if (v.kind === 'tower') mesh = extrude(v.polygon, h, matTower, matEdge);
   else if (v.kind === 'future') { const key = cfg.rhythm || 'none'; if (!ghostMats.has(key)) ghostMats.set(key, ghostMaterial(matGhost, cfg));
-    mesh = extrude(v.polygon, h, ghostMats.get(key), matGhostEdge); mesh.castShadow = false; facadeInfo.push({ id: v.id, style: 'ghost', rhythm: key }); }
+    mesh = extrude(v.polygon, h, ghostMats.get(key), matGhostEdge); mesh.castShadow = false; mesh.userData.noAO = true; facadeInfo.push({ id: v.id, style: 'ghost', rhythm: key }); }
   else if (v.kind === 'clubhouse') mesh = extrude(v.polygon, h, matClub, matEdge);
   else mesh = extrude(v.polygon, h, matServices, matEdge);
   mesh.userData.volume = v; volumeMeshes[v.id] = mesh; if (!mesh.parent) world.add(mesh);
@@ -240,7 +262,7 @@ const waterMeshes = [];
 for (const f of features) {
   if (f.kind === 'court') {
     const r = rectM(f); const slab = box(r.w, 0.25, r.d, new THREE.MeshStandardMaterial({ color: COURT_COLOR[f.sport] || 0x4a86c9, roughness: 0.85 }), r.cx, 0.125, r.cz); world.add(slab);
-    const top = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), new THREE.MeshStandardMaterial({ map: courtLines(f.sport, r.w, r.d), transparent: true, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -1 }));
+    const top = new THREE.Mesh(new THREE.PlaneGeometry(r.w, r.d), new THREE.MeshStandardMaterial({ map: courtLines(f.sport, r.w, r.d), transparent: true, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
     top.rotation.x = -Math.PI / 2; top.position.set(r.cx, 0.256, r.cz); top.receiveShadow = true; world.add(top);
   }
   else if (f.kind === 'rink') { const e = f.ellipse; const m = cyl(1, 1, 0.1, matRink, toX(e.cx), 0.05, toZ(e.cy), 64); m.scale.set(e.rx * mpp, 1, e.ry * mpp); world.add(m);
@@ -275,6 +297,10 @@ const greenery = plantGreenery(site, sampleImg, { toX, toZ, mpp, pointInPoly, is
 for (const im of greenery.treeMeshes) world.add(im); world.add(greenery.trunks); world.add(greenery.hedgeMesh);
 if (greenery.lawnTexture) { lawnify(groundMat, greenery.lawnTexture); groundMat.needsUpdate = true; }
 const treeCount = greenery.trees;
+// ---- baked ground AO (B4): building bases, trees and hedges darken the plan softly (viewer/ground-ao.js) ----
+const toPx = (x, z) => [x / mpp + cen[0], z / mpp + cen[1]];
+const groundAO = buildGroundAO({ crop: site.plan.crop, toPx, mpp, volumes: site.volumes.filter(v => v.kind !== 'future'), trees: greenery.treePts, hedges: greenery.hedgePts });
+groundMat.aoMap = groundAO.texture; groundMat.aoMapIntensity = 0.9; groundMat.needsUpdate = true;
 
 // ============ camera helpers ============
 const sph = new THREE.Spherical();
@@ -312,6 +338,8 @@ function setLight(mode) { lightTarget = mode === 'dusk' ? 1 : 0; btnLight.textCo
 btnLight.addEventListener('click', () => setLight(lightTarget ? 'day' : 'dusk'));
 setLight(lightK ? 'dusk' : 'day'); applyLighting(lightK);
 
+// ============ post (B4): desktop GTAO through an EffectComposer; off on phones, with ?fx=noao, or whenever log depth is on ============
+const post = createPost(renderer, scene, camera, { clipBox: new THREE.Box3(new THREE.Vector3(bounds.minX - 50, -10, bounds.minZ - 50), new THREE.Vector3(bounds.maxX + 50, 200, bounds.maxZ + 50)), enabled: !!TIER.composer && !FX.has('noao') && !LOG_DEPTH });   // created before the first resize() so resize can size its targets
 resize(); DEFAULT_VIEW.radius = fitRadius();
 applyView({ radius: 1500, phi: THREE.MathUtils.degToRad(8), theta: DEFAULT_VIEW.theta - 0.35, target: DEFAULT_VIEW.target });
 const explore = $('#btnExplore'); explore.disabled = false; explore.textContent = 'Explore the site';
@@ -340,7 +368,7 @@ for (const h of hotspots) {
 }
 // selection ring on the ground
 const ring = new THREE.Mesh(new THREE.RingGeometry(5.2, 6.8, 48), new THREE.MeshBasicMaterial({ color: 0xc8772a, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
-ring.rotation.x = -Math.PI / 2; ring.position.y = 0.45; ring.visible = false; scene.add(ring);
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.45; ring.visible = false; scene.add(ring); ring.userData.noAO = true;
 
 const ray = new THREE.Raycaster(); let pinTick = 0; const tmpV = new THREE.Vector3();
 function updatePins(now) {
@@ -467,7 +495,7 @@ const hashTour = (location.hash.match(/tour=([^&]+)/) || [])[1];
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio(), phone = isPhone(), key = w + 'x' + h + (phone ? 'p' : 'd');
   if (key === lastSize) return; lastSize = key;
-  renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
+  renderer.setSize(w, h, false); labelRenderer.setSize(w, h); post.setSize(w, h);
   // keep the orbit target centred in the part of the canvas the panel/sheet does not cover
   if (phone) { camera.aspect = w / (h + SHEET_H); camera.setViewOffset(w, h + SHEET_H, 0, SHEET_H, w, h); }
   else { camera.aspect = (w + PANEL_W) / h; camera.setViewOffset(w + PANEL_W, h, PANEL_W, 0, w, h); }
@@ -482,6 +510,18 @@ function waterInView() {   // B3: ripples cost frames only while a pool is near 
 let lastT = performance.now(), dirty = true, dirtyUntil = performance.now() + 3000, lastRender = 0;
 controls.addEventListener('change', () => { dirty = true; });
 window.addEventListener('resize', () => { lastSize = ''; dirty = true; });
+// auto-tier (B4): on a device-resolved high tier, if continuously rendered frames average > 40 ms, drop the AO pass; if still slow, reload as mid. Explicit ?q= or ?autotier=0 keeps whatever was asked for.
+const autoTier = { samples: [], stage: 0, avgMs: null, decided: q.get('q') ? 'kept (explicit ?q)' : (q.get('autotier') === '0' ? 'kept (autotier=0)' : null) };
+let prevBusy = false;
+function noteFrame(now, busy) {
+  if (busy && prevBusy && lastRender) autoTier.samples.push(now - lastRender);
+  prevBusy = busy;
+  if (autoTier.decided || QUALITY !== 'high' || autoTier.samples.length < 70) return;
+  const s = autoTier.samples.slice(10); autoTier.avgMs = +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(1);
+  if (autoTier.avgMs <= 40) { autoTier.decided = 'kept'; return; }
+  if (post.enabled && autoTier.stage === 0) { post.enabled = false; autoTier.stage = 1; autoTier.samples = []; console.info('walk: AO pass off, avg ' + autoTier.avgMs + ' ms/frame'); return; }
+  autoTier.decided = 'reload as mid'; const u = new URL(location.href); u.searchParams.set('q', 'mid'); u.searchParams.set('autotier', '1'); location.replace(u);
+}
 renderer.setAnimationLoop(now => {
   const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
   resize(); stepTween(now); stepTour(dt);
@@ -489,13 +529,15 @@ renderer.setAnimationLoop(now => {
   if (controls.enabled && controls.update()) dirty = true;
   const water = waterInView(); if (water) waterTex.offset.set(now * 0.000012, now * 0.000007);   // ≈0.5 m/s drift across the 38.4 m tile
   const animating = !!tween || (tour && !tour.paused) || ring.visible || now < dirtyUntil;
-  if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < (water ? 1000 / TIER.waterFps : 90)) return; }   // idle: ~11 fps keeps the compositor fed; TIER.waterFps while a pool is on screen
+  if (!dirty && !animating) { if (FX.has('stop') || now - lastRender < (water ? 1000 / TIER.waterFps : 90)) { prevBusy = false; return; } }   // idle: ~11 fps keeps the compositor fed; TIER.waterFps while a pool is on screen
+  const busy = dirty || animating; noteFrame(now, busy);
   dirty = false; lastRender = now;
   renderer.info.reset();
-  updateCompass(); updatePins(now); renderer.render(scene, camera); labelRenderer.render(scene, camera);
+  updateCompass(); updatePins(now); fitShadowToView(); post.render(); labelRenderer.render(scene, camera);
 });
 
 window.__walk = { scene, camera, controls, site, flyTo, fitView, DEFAULT_VIEW, currentView, volumeMeshes, renderer, THREE, treeCount, setLight, select, deselect, setTheme, hotspots, startTour, endTour, tourState, get tour() { return tour; }, get selected() { return selected; },
   quality: QUALITY, tier: TIER, PRESETS, applyLighting, get lightK() { return lightK; }, sky, plinthTopY: PLINTH_TOP, facades: facadeInfo,
   greenery: { trees: greenery.trees, hedges: greenery.hedges, variants: greenery.variants, lawn: !!greenery.lawnTexture, water: !!waterTex }, hedgeCount: greenery.hedges, waterMeshes,
+  post, sun, get shadowFit() { return shadowFit; }, groundAO: { size: groundAO.size, darkened: groundAO.darkened }, autoTier, logDepth: LOG_DEPTH,
   stats: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs.length, textures: renderer.info.memory.textures }) };
