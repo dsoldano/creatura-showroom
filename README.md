@@ -4,6 +4,20 @@ An interactive master-plan demonstration: a developer's published site plan beco
 
 Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 
+## Run it in 60 seconds
+
+No build step, no dependencies for the viewer itself (Three.js r170 loads from jsDelivr via an import map):
+
+```bash
+git clone https://github.com/devenpro/siteplan-walk.git && cd siteplan-walk
+python3 -m http.server 8765
+# open http://127.0.0.1:8765/viewer/index.html?project=../projects/belvedere/
+```
+
+Then read `docs/adding-a-project.md` to put your own site plan in — a new project is a new `projects/<slug>/` folder (a `site.json` traced with `tools/trace.html`, a `plan.jpg`, postcards), with no code changes.
+
+**Licence:** the code is MIT (see `LICENSE`). The example data under `projects/belvedere/` is Brigade Group's published marketing material plus AI images derived from it, used only to demonstrate the viewer — it is **not** licensed for reuse; bring your own plan.
+
 ## What it is, honestly
 
 - The ground is the developer's published master plan (AI-upscaled to 4K for crispness), clipped to the site boundary on a plinth.
@@ -18,7 +32,7 @@ Live: **https://walk.csoul.cloud/belvedere/** · hub: https://walk.csoul.cloud/
 viewer/            index.html, app.js, quality.js, sky.js, facade.js, facade-geom.js, style.css  — the Three.js viewer (ES modules from jsDelivr, no build step)
 projects/<slug>/   site.json (everything about one project), plan.jpg (ground), postcards/ (+ manifest.json, ai-log.json), source/ (originals + PROVENANCE.md), og.jpg
 tools/             trace.html (tracer), make-ground.mjs, make-postcards.mjs, import-ai.mjs, deploy.sh, check.mjs, shoot.mjs, crop.mjs
-docs/              superpowers/specs (the approved designs), adding-a-project.md, pitch/ (screenshot set), checkpoints/ (per-sub-phase evidence)
+docs/              adding-a-project.md (your own plan, step by step), hosting.md (CreatiSoul's deployment), superpowers/specs + plans (the approved designs), pitch/ (screenshot set), checkpoints/ (per-sub-phase evidence)
 tests/             node --test unit tests for the pure viewer modules (quality.js)
 ```
 
@@ -30,8 +44,8 @@ python3 -m http.server 8765 --directory .
 #   viewer:  http://127.0.0.1:8765/viewer/index.html?project=../projects/belvedere/
 #   tracer:  http://127.0.0.1:8765/tools/trace.html?json=../projects/belvedere/site.json
 
-# one-time: Playwright for the tools (ESM ignores NODE_PATH, so link it into tools/)
-mkdir -p tools/node_modules && ln -sfn /root/projects/gcr-rebuild/tools/node_modules/playwright tools/node_modules/playwright && ln -sfn /root/projects/gcr-rebuild/tools/node_modules/playwright-core tools/node_modules/playwright-core
+# one-time: Playwright for check.mjs / shoot.mjs (Node ≥ 22; ffmpeg is needed by the media tools). ESM ignores NODE_PATH, so it lives in tools/
+(cd tools && npm install && npx playwright install chromium)
 
 node tools/make-ground.mjs projects/belvedere/source/masterplan-4k.png projects/belvedere/site.json projects/belvedere/plan.jpg 2048
 node tools/make-postcards.mjs projects/belvedere          # developer renders + a plan-detail crop per hotspot → manifest.json
@@ -50,18 +64,7 @@ Quality tiers (arc 2, B1): `mid` (phones) and `low` (checks) keep every one of t
 
 ## Hosting
 
-`walk-csoul` is a plain `nginx:alpine` container on the `coolify` network serving `/root/walk` read-only, routed by the Coolify Traefik with the labels below (Let's Encrypt via the `letsencrypt` resolver). It is independent of every other app on the host and safe to remove and recreate:
-
-```bash
-docker rm -f walk-csoul
-docker run -d --name walk-csoul --restart unless-stopped --network coolify -v /root/walk:/usr/share/nginx/html:ro \
-  -l traefik.enable=true \
-  -l 'traefik.http.routers.walk-http.rule=Host(`walk.csoul.cloud`)'  -l traefik.http.routers.walk-http.entryPoints=http  -l traefik.http.routers.walk-http.middlewares=walk-redirect -l traefik.http.routers.walk-http.service=walk \
-  -l 'traefik.http.routers.walk-https.rule=Host(`walk.csoul.cloud`)' -l traefik.http.routers.walk-https.entryPoints=https -l traefik.http.routers.walk-https.tls=true -l traefik.http.routers.walk-https.tls.certresolver=letsencrypt -l traefik.http.routers.walk-https.middlewares=walk-gzip -l traefik.http.routers.walk-https.service=walk \
-  -l traefik.http.middlewares.walk-redirect.redirectscheme.scheme=https -l traefik.http.middlewares.walk-gzip.compress=true -l traefik.http.services.walk.loadbalancer.server.port=80 nginx:alpine
-```
-
-DNS: `walk.csoul.cloud` A → `62.72.56.130` (Hostinger, unproxied). `robots.txt` disallows everything; pages carry `noindex`.
+The viewer is static files — serve `tools/deploy.sh`'s output folder from any web server. CreatiSoul's own setup (nginx container, Traefik labels, DNS) is in `docs/hosting.md`.
 
 ## Verification rules
 
