@@ -16,7 +16,7 @@ python3 -m http.server 8765
 
 Then read `docs/adding-a-project.md` to put your own site plan in — a new project is a new `projects/<slug>/` folder (a `site.json` traced with `tools/trace.html`, a `plan.jpg`, postcards), with no code changes.
 
-**Licence:** the code is MIT (see `LICENSE`). The example data under `projects/belvedere/` is Brigade Group's published marketing material plus AI images derived from it, used only to demonstrate the viewer — it is **not** licensed for reuse; bring your own plan.
+**Licence:** the code is MIT (see `LICENSE`; scope in `NOTICE.md`). The example data under `projects/belvedere/` is Brigade Group's published marketing material plus AI images derived from it, used only to demonstrate the viewer — it is **not** licensed for reuse; bring your own plan.
 
 ## What it is, honestly
 
