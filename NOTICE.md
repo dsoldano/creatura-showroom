@@ -1,6 +1,6 @@
 # Scope of the licence
 
-The MIT licence above covers the code and documentation in this repository:
+The MIT licence in `LICENSE` covers the code and documentation in this repository:
 viewer/, tools/, tests/, docs/ and the top-level files.
 
 It does NOT cover the example project data under projects/ (today
