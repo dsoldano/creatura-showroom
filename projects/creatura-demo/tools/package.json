@@ -1,8 +1,0 @@
-{
-  "name": "siteplan-walk-tools",
-  "private": true,
-  "description": "Playwright for tools/check.mjs and tools/shoot.mjs (the viewer itself has no dependencies to install)",
-  "devDependencies": {
-    "playwright": "1.60.0"
-  }
-}
