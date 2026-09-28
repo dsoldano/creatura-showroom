@@ -1,0 +1,442 @@
+{
+  "images": {
+    "tower-a-info": [
+      {
+        "file": "dev-render-exterior-aerial.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-tower-a-info.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "tennis-court": [
+      {
+        "file": "dev-render-tennis-court-exterior-elevated.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-tennis-court.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "tower-b-info": [
+      {
+        "file": "dev-render-tennis-court-exterior-elevated.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-tower-b-info.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "clubhouse-info": [
+      {
+        "file": "dev-render-building-exterior.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-clubhouse-info.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "clubhouse-drop-off": [
+      {
+        "file": "dev-render-building-exterior.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-clubhouse-drop-off.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "jogging-loop": [
+      {
+        "file": "dev-render-garden-outdoor-elevated.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-jogging-loop.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "garden-pavilion": [
+      {
+        "file": "dev-render-community-garden-outdoor-ground-level.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-garden-pavilion.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "tree-court": [
+      {
+        "file": "dev-render-community-garden-outdoor-ground-level.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-tree-court.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "arrival-plaza": [
+      {
+        "file": "dev-render-landscaped-courtyard-exterior-street-level.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-arrival-plaza.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "event-plaza": [
+      {
+        "file": "dev-render-seating-area-outdoor-ground.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-event-plaza.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "deck-seating": [
+      {
+        "file": "dev-render-seating-area-outdoor-ground.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-deck-seating.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "deck-seating-2": [
+      {
+        "file": "dev-render-seating-area-outdoor-ground.webp",
+        "kind": "developer",
+        "credit": "Brigade Group render"
+      },
+      {
+        "file": "plan-deck-seating-2.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "entrance-portal": [
+      {
+        "file": "ai-entrance-portal.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-entrance-portal.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "basement-ramp": [
+      {
+        "file": "plan-basement-ramp.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "tower-drop-off": [
+      {
+        "file": "ai-tower-drop-off.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-tower-drop-off.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "arrival-boulevard": [
+      {
+        "file": "ai-arrival-boulevard.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-arrival-boulevard.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "event-kiosk": [
+      {
+        "file": "plan-event-kiosk.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "stepped-well-plaza": [
+      {
+        "file": "ai-stepped-well-plaza.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-stepped-well-plaza.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "kids-play-area": [
+      {
+        "file": "plan-kids-play-area.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "floral-garden": [
+      {
+        "file": "plan-floral-garden.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "skating-rink": [
+      {
+        "file": "ai-skating-rink.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-skating-rink.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "surface-parking": [
+      {
+        "file": "plan-surface-parking.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "pickleball-court": [
+      {
+        "file": "ai-pickleball-court.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-pickleball-court.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "sculpture-court": [
+      {
+        "file": "plan-sculpture-court.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "toddlers-sand-pit": [
+      {
+        "file": "plan-toddlers-sand-pit.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "kids-play-epdm": [
+      {
+        "file": "ai-kids-play-epdm.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-kids-play-epdm.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "lawn-mound": [
+      {
+        "file": "plan-lawn-mound.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "outdoor-reading": [
+      {
+        "file": "plan-outdoor-reading.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "outdoor-gym": [
+      {
+        "file": "plan-outdoor-gym.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "multipurpose-court": [
+      {
+        "file": "ai-multipurpose-court.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-multipurpose-court.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "pet-park": [
+      {
+        "file": "ai-pet-park.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-pet-park.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "butterfly-garden": [
+      {
+        "file": "plan-butterfly-garden.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "stepped-arena": [
+      {
+        "file": "ai-stepped-arena.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-stepped-arena.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "outdoor-workstation": [
+      {
+        "file": "ai-outdoor-workstation.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-outdoor-workstation.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "staircase": [
+      {
+        "file": "plan-staircase.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "nature-play": [
+      {
+        "file": "plan-nature-play.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "outdoor-picnic": [
+      {
+        "file": "plan-outdoor-picnic.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "yoga-lawn": [
+      {
+        "file": "ai-yoga-lawn.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-yoga-lawn.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "meditation-deck": [
+      {
+        "file": "ai-meditation-deck.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-meditation-deck.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "celebration-lawn": [
+      {
+        "file": "ai-celebration-lawn.jpg",
+        "kind": "ai",
+        "credit": "AI visualisation via Higgsfield · indicative, not a developer render"
+      },
+      {
+        "file": "plan-celebration-lawn.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "promenade-stair-plaza": [
+      {
+        "file": "plan-promenade-stair-plaza.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "toddlers-play-area": [
+      {
+        "file": "plan-toddlers-play-area.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "viewing-deck": [
+      {
+        "file": "plan-viewing-deck.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ],
+    "services": [
+      {
+        "file": "plan-services.jpg",
+        "kind": "plan",
+        "credit": "Master plan detail"
+      }
+    ]
+  }
+}

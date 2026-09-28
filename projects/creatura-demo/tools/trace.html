@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Site-plan tracer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --line:#2c3038; --ink:#e8e6e1; --muted:#9aa0a8; --accent:#f2a74b; }
+  * { box-sizing:border-box }
+  body { margin:0; font:13px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); display:grid; grid-template-columns:320px 1fr; height:100vh; overflow:hidden }
+  aside { background:var(--panel); border-right:1px solid var(--line); padding:12px; overflow:auto; display:flex; flex-direction:column; gap:10px }
+  h1 { font-size:14px; margin:0 0 4px; letter-spacing:.02em }
+  h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:8px 0 4px }
+  label { display:block; color:var(--muted); font-size:11px; margin-top:4px }
+  input[type=text], select, textarea { width:100%; background:#0f1114; color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:5px 6px; font:12px ui-monospace, monospace }
+  textarea { min-height:120px; resize:vertical }
+  button { background:#2a2f38; color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:5px 8px; cursor:pointer; font:12px system-ui }
+  button.on { background:var(--accent); color:#111; border-color:var(--accent) }
+  .row { display:flex; gap:6px; flex-wrap:wrap }
+  .row button { flex:1 }
+  #list { max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:4px; padding:4px; font:12px ui-monospace, monospace }
+  #list div { padding:2px 4px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  #list div.sel { background:#3a2f1c; color:var(--accent) }
+  #stage { position:relative; overflow:hidden; cursor:crosshair }
+  canvas { display:block }
+  #hud { position:absolute; left:10px; bottom:8px; background:rgba(0,0,0,.55); padding:4px 8px; border-radius:4px; font:11px ui-monospace, monospace; color:#ddd; pointer-events:none }
+  .muted { color:var(--muted) }
+  kbd { background:#0f1114; border:1px solid var(--line); border-radius:3px; padding:0 4px; font:11px ui-monospace, monospace }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Site-plan tracer</h1>
+  <div class="muted">Trace a master plan into <code>site.json</code>. Coordinates are source-image pixels.</div>
+
+  <h2>Load</h2>
+  <label>Plan image URL <input type="text" id="imgUrl" placeholder="../projects/x/source/masterplan.webp"></label>
+  <label>site.json URL <input type="text" id="jsonUrl" placeholder="../projects/x/site.json"></label>
+  <div class="row"><button id="btnLoad">Load URLs</button><button id="btnFit">Fit view</button></div>
+  <label>…or pick files <input type="file" id="fileImg" accept="image/*"> <input type="file" id="fileJson" accept=".json"></label>
+
+  <h2>Overlay <span class="muted">(<kbd>o</kbd> blinks)</span></h2>
+  <label>Second image URL <input type="text" id="img2Url" placeholder="../projects/x/source/ai-ground-1.png"></label>
+  <div class="row"><label>Fit <select id="img2Fit"><option value="frame">plan frame</option><option value="crop">plan crop</option></select></label><button id="btnImg2">Load overlay</button></div>
+  <label>Alpha <input type="range" id="img2Alpha" min="0" max="1" step="0.05" value="0.5"></label>
+  <div class="muted" id="img2Info">no overlay</div>
+
+  <h2>Mode <span class="muted">(<kbd>v</kbd> <kbd>h</kbd> <kbd>p</kbd> <kbd>r</kbd> <kbd>c</kbd> <kbd>m</kbd>)</span></h2>
+  <div class="row">
+    <button data-mode="select" class="on">Select</button><button data-mode="pan">Pan</button><button data-mode="polygon">Polygon</button>
+  </div>
+  <div class="row">
+    <button data-mode="rect">Rect</button><button data-mode="circle">Circle</button><button data-mode="pin">Pin</button>
+  </div>
+  <label>New polygon becomes <select id="newKind"><option value="volume">volume (tower/future/clubhouse/services)</option><option value="feature">feature</option><option value="boundary">site boundary</option></select></label>
+  <div class="muted">Polygon: click points, <kbd>Enter</kbd> or double-click to close, <kbd>Esc</kbd> cancels. Select: drag a vertex, a pin, or a whole shape. <kbd>Del</kbd> removes. Wheel zooms, space+drag or Pan mode pans.</div>
+
+  <h2>Objects</h2>
+  <div id="list"></div>
+
+  <h2>Selected</h2>
+  <textarea id="props" spellcheck="false"></textarea>
+  <div class="row"><button id="btnApply">Apply edits</button><button id="btnDelete">Delete</button></div>
+
+  <h2>Scale</h2>
+  <div id="scale" class="muted">–</div>
+
+  <h2>Export</h2>
+  <div class="row"><button id="btnExport">Build JSON</button><button id="btnCopy">Copy</button><a id="dl" download="site.json"><button>Download</button></a></div>
+  <textarea id="out" spellcheck="false" placeholder="site.json appears here"></textarea>
+</aside>
+<div id="stage"><canvas id="cv"></canvas><div id="hud">–</div></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const cv = $('#cv'), ctx = cv.getContext('2d'), stage = $('#stage'), hud = $('#hud');
+  let img = null, state = emptyState(), view = { s: 1, tx: 0, ty: 0 };
+  let img2 = null; const overlay = { src: '', alpha: 0.5, fit: 'frame', dx: 0, dy: 0, loaded: false, blink: false };   // second image (an AI ground candidate) drawn over the plan
+  function overlayRect() { const c = overlay.fit === 'crop' && state.plan.crop ? state.plan.crop : { x: 0, y: 0, w: state.plan.width || (img && img.width) || 0, h: state.plan.height || (img && img.height) || 0 }; return { x: c.x + overlay.dx, y: c.y + overlay.dy, w: c.w, h: c.h }; }
+  let mode = 'select', sel = null, drag = null, draft = null, spaceDown = false, mouse = { x: 0, y: 0 };
+
+  function emptyState() {
+    return { slug: 'project', name: 'Project', plan: { image: '', width: 0, height: 0, crop: null, northDeg: null }, scale: { acres: 0, metresPerPx: null },
+      boundary: [], volumes: [], features: [], themes: [], hotspots: [], tours: [] };
+  }
+
+  // ---------- view ----------
+  function resize() {
+    const r = stage.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+    draw();
+  }
+  function fit() {
+    if (!img) return;
+    const r = stage.getBoundingClientRect();
+    view.s = Math.min(r.width / img.width, r.height / img.height) * 0.96;
+    view.tx = (r.width - img.width * view.s) / 2; view.ty = (r.height - img.height * view.s) / 2;
+    draw();
+  }
+  const toWorld = (sx, sy) => [(sx - view.tx) / view.s, (sy - view.ty) / view.s];
+  const toScreen = (wx, wy) => [wx * view.s + view.tx, wy * view.s + view.ty];
+
+  // ---------- drawing ----------
+  const KIND_FILL = { tower: 'rgba(255,248,230,.75)', future: 'rgba(160,180,210,.45)', clubhouse: 'rgba(230,200,150,.7)', services: 'rgba(200,200,200,.6)' };
+  function draw() {
+    const dpr = devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#14161a'; ctx.fillRect(0, 0, cv.width, cv.height);
+    if (!img) { ctx.fillStyle = '#666'; ctx.font = '14px system-ui'; ctx.fillText('Load a plan image', 20, 30); return; }
+    ctx.save(); ctx.translate(view.tx, view.ty); ctx.scale(view.s, view.s);
+    ctx.imageSmoothingEnabled = view.s < 2;
+    ctx.drawImage(img, 0, 0);
+    if (img2 && overlay.loaded) { const r = overlayRect(), a = overlay.blink ? 0 : overlay.alpha; if (a > 0) { ctx.save(); ctx.globalAlpha = a; ctx.drawImage(img2, r.x, r.y, r.w, r.h); ctx.restore(); } }
+    const lw = 1 / view.s;
+    // crop
+    if (state.plan.crop) { const c = state.plan.crop; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([6 * lw, 4 * lw]); ctx.lineWidth = lw; ctx.strokeRect(c.x, c.y, c.w, c.h); ctx.setLineDash([]); }
+    // boundary
+    if (state.boundary.length) { path(state.boundary, true); ctx.strokeStyle = '#f2a74b'; ctx.lineWidth = 2 * lw; ctx.stroke(); vertices(state.boundary, sel && sel.type === 'boundary'); }
+    // volumes
+    state.volumes.forEach((v, i) => {
+      path(v.polygon, true); ctx.fillStyle = KIND_FILL[v.kind] || 'rgba(255,255,255,.5)'; ctx.fill();
+      const isSel = sel && sel.type === 'volume' && sel.i === i;
+      ctx.strokeStyle = isSel ? '#f2a74b' : '#333'; ctx.lineWidth = (isSel ? 2 : 1) * lw; ctx.stroke();
+      const c = centroid(v.polygon); label(v.id, c[0], c[1], '#222');
+      if (isSel) vertices(v.polygon, true);
+    });
+    // features
+    state.features.forEach((f, i) => {
+      const isSel = sel && sel.type === 'feature' && sel.i === i;
+      ctx.strokeStyle = isSel ? '#f2a74b' : '#0a5fd6'; ctx.lineWidth = (isSel ? 2 : 1.2) * lw; ctx.fillStyle = 'rgba(40,120,255,.25)';
+      if (f.rect) { const [x0, y0, x1, y1] = f.rect; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); ctx.strokeRect(x0, y0, x1 - x0, y1 - y0); label(f.id, (x0 + x1) / 2, (y0 + y1) / 2, '#0a3d8f'); }
+      else if (f.circle) { ctx.beginPath(); ctx.arc(f.circle.cx, f.circle.cy, f.circle.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); label(f.id, f.circle.cx, f.circle.cy + f.circle.r + 8, '#0a3d8f'); }
+      else if (f.ellipse) { ctx.beginPath(); ctx.ellipse(f.ellipse.cx, f.ellipse.cy, f.ellipse.rx, f.ellipse.ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); label(f.id, f.ellipse.cx, f.ellipse.cy, '#0a3d8f'); }
+      else if (f.polygon) { path(f.polygon, true); ctx.fill(); ctx.stroke(); const c = centroid(f.polygon); label(f.id, c[0], c[1], '#0a3d8f'); if (isSel) vertices(f.polygon, true); }
+    });
+    // hotspots
+    state.hotspots.forEach((h, i) => {
+      const isSel = sel && sel.type === 'hotspot' && sel.i === i;
+      (h.also || []).forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, Math.PI * 2); ctx.strokeStyle = '#d33'; ctx.lineWidth = 1.5 * lw; ctx.stroke(); });
+      ctx.beginPath(); ctx.arc(h.pos[0], h.pos[1], 7, 0, Math.PI * 2); ctx.fillStyle = isSel ? '#f2a74b' : '#d33'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2 * lw; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(h.n), h.pos[0], h.pos[1] + 0.5);
+    });
+    // draft
+    if (draft) {
+      ctx.strokeStyle = '#3ad17c'; ctx.lineWidth = 1.5 * lw; ctx.setLineDash([4 * lw, 3 * lw]);
+      if (draft.type === 'polygon') { path(draft.pts.concat([toWorld(mouse.x, mouse.y)]), false); ctx.stroke(); vertices(draft.pts, true); }
+      if (draft.type === 'rect') { const [x1, y1] = toWorld(mouse.x, mouse.y); ctx.strokeRect(draft.x0, draft.y0, x1 - draft.x0, y1 - draft.y0); }
+      if (draft.type === 'circle') { const [x1, y1] = toWorld(mouse.x, mouse.y); ctx.beginPath(); ctx.arc(draft.cx, draft.cy, Math.hypot(x1 - draft.cx, y1 - draft.cy), 0, Math.PI * 2); ctx.stroke(); }
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+  function path(pts, close) { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); if (close) ctx.closePath(); }
+  function vertices(pts, strong) { const r = (strong ? 4 : 3) / view.s; pts.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fillStyle = strong ? '#f2a74b' : '#fff'; ctx.fill(); ctx.strokeStyle = '#000'; ctx.lineWidth = 1 / view.s; ctx.stroke(); }); }
+  function label(t, x, y, col) { ctx.font = `${Math.max(9, 11 / Math.sqrt(view.s))}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText(t, x, y); }
+  function centroid(pts) { let x = 0, y = 0; pts.forEach(p => { x += p[0]; y += p[1]; }); return [x / pts.length, y / pts.length]; }
+
+  // ---------- hit testing ----------
+  function pointInPoly(p, poly) { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if (((yi > p[1]) !== (yj > p[1])) && (p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi)) inside = !inside; } return inside; }
+  function hit(sx, sy) {
+    const w = toWorld(sx, sy), tol = 7 / view.s;
+    // vertices of selected shape first
+    if (sel) { const pts = selPts(); if (pts) { for (let k = 0; k < pts.length; k++) if (Math.hypot(pts[k][0] - w[0], pts[k][1] - w[1]) < tol) return { ...sel, vertex: k }; } }
+    for (let i = state.hotspots.length - 1; i >= 0; i--) { const h = state.hotspots[i]; if (Math.hypot(h.pos[0] - w[0], h.pos[1] - w[1]) < 9 / view.s) return { type: 'hotspot', i }; const a = (h.also || []); for (let k = 0; k < a.length; k++) if (Math.hypot(a[k][0] - w[0], a[k][1] - w[1]) < 8 / view.s) return { type: 'hotspot', i, also: k }; }
+    for (let i = state.features.length - 1; i >= 0; i--) { const f = state.features[i]; if (f.rect && w[0] >= f.rect[0] && w[0] <= f.rect[2] && w[1] >= f.rect[1] && w[1] <= f.rect[3]) return { type: 'feature', i }; if (f.circle && Math.hypot(f.circle.cx - w[0], f.circle.cy - w[1]) <= f.circle.r) return { type: 'feature', i }; if (f.ellipse && ((w[0] - f.ellipse.cx) ** 2) / f.ellipse.rx ** 2 + ((w[1] - f.ellipse.cy) ** 2) / f.ellipse.ry ** 2 <= 1) return { type: 'feature', i }; if (f.polygon && pointInPoly(w, f.polygon)) return { type: 'feature', i }; }
+    for (let i = state.volumes.length - 1; i >= 0; i--) if (pointInPoly(w, state.volumes[i].polygon)) return { type: 'volume', i };
+    if (state.boundary.length) { for (let k = 0; k < state.boundary.length; k++) if (Math.hypot(state.boundary[k][0] - w[0], state.boundary[k][1] - w[1]) < tol) return { type: 'boundary', vertex: k }; }
+    return null;
+  }
+  function selObj() { if (!sel) return null; if (sel.type === 'boundary') return state.boundary; return state[sel.type + 's'][sel.i]; }
+  function selPts() { if (!sel) return null; if (sel.type === 'boundary') return state.boundary; const o = selObj(); return o.polygon || null; }
+  function moveSel(dx, dy) {
+    const o = selObj(); if (!o) return;
+    if (sel.vertex != null) { const pts = selPts(); pts[sel.vertex][0] += dx; pts[sel.vertex][1] += dy; return; }
+    if (sel.type === 'hotspot') { if (sel.also != null) { o.also[sel.also][0] += dx; o.also[sel.also][1] += dy; } else { o.pos[0] += dx; o.pos[1] += dy; } return; }
+    if (sel.type === 'boundary') { o.forEach(p => { p[0] += dx; p[1] += dy; }); return; }
+    if (o.polygon) o.polygon.forEach(p => { p[0] += dx; p[1] += dy; });
+    if (o.rect) { o.rect[0] += dx; o.rect[2] += dx; o.rect[1] += dy; o.rect[3] += dy; }
+    if (o.circle) { o.circle.cx += dx; o.circle.cy += dy; }
+    if (o.ellipse) { o.ellipse.cx += dx; o.ellipse.cy += dy; }
+  }
+
+  // ---------- events ----------
+  stage.addEventListener('wheel', e => { e.preventDefault(); const k = Math.exp(-e.deltaY * 0.0015); const [wx, wy] = toWorld(e.offsetX, e.offsetY); view.s *= k; view.tx = e.offsetX - wx * view.s; view.ty = e.offsetY - wy * view.s; draw(); }, { passive: false });
+  stage.addEventListener('mousedown', e => {
+    mouse = { x: e.offsetX, y: e.offsetY };
+    if (e.button === 1 || spaceDown || mode === 'pan') { drag = { type: 'pan', x: e.offsetX, y: e.offsetY }; return; }
+    const w = toWorld(e.offsetX, e.offsetY);
+    if (mode === 'select') { const h = hit(e.offsetX, e.offsetY); sel = h ? { type: h.type, i: h.i, vertex: h.vertex, also: h.also } : null; if (h) drag = { type: 'move', wx: w[0], wy: w[1] }; syncSel(); draw(); return; }
+    if (mode === 'polygon') { if (!draft) draft = { type: 'polygon', pts: [] }; draft.pts.push([round(w[0]), round(w[1])]); draw(); return; }
+    if (mode === 'rect') { draft = { type: 'rect', x0: round(w[0]), y0: round(w[1]) }; return; }
+    if (mode === 'circle') { draft = { type: 'circle', cx: round(w[0]), cy: round(w[1]) }; return; }
+    if (mode === 'pin') { const nums = state.hotspots.map(h => +h.n).filter(n => !isNaN(n)); const n = nums.length ? Math.max(...nums) + 1 : 1; state.hotspots.push({ n, id: 'hotspot-' + n, name: 'Hotspot ' + n, theme: '', pos: [round(w[0]), round(w[1])] }); sel = { type: 'hotspot', i: state.hotspots.length - 1 }; syncSel(); syncList(); draw(); return; }
+  });
+  stage.addEventListener('mousemove', e => {
+    const w = toWorld(e.offsetX, e.offsetY); hud.textContent = `x ${round(w[0])}  y ${round(w[1])}   zoom ${view.s.toFixed(2)}   mode ${mode}`;
+    if (drag && drag.type === 'pan') { view.tx += e.offsetX - drag.x; view.ty += e.offsetY - drag.y; drag.x = e.offsetX; drag.y = e.offsetY; draw(); }
+    else if (drag && drag.type === 'move') { moveSel(round(w[0] - drag.wx), round(w[1] - drag.wy)); drag.wx += round(w[0] - drag.wx); drag.wy += round(w[1] - drag.wy); syncSel(); draw(); }
+    mouse = { x: e.offsetX, y: e.offsetY }; if (draft) draw();
+  });
+  window.addEventListener('mouseup', e => {
+    if (drag) { drag = null; return; }
+    if (draft && draft.type === 'rect') { const w = toWorld(mouse.x, mouse.y); const r = [Math.min(draft.x0, round(w[0])), Math.min(draft.y0, round(w[1])), Math.max(draft.x0, round(w[0])), Math.max(draft.y0, round(w[1]))]; draft = null; if (r[2] - r[0] > 2) { state.features.push({ id: 'feature-' + (state.features.length + 1), kind: 'court', rect: r }); sel = { type: 'feature', i: state.features.length - 1 }; } syncSel(); syncList(); draw(); }
+    if (draft && draft.type === 'circle') { const w = toWorld(mouse.x, mouse.y); const r = round(Math.hypot(w[0] - draft.cx, w[1] - draft.cy)); const c = draft; draft = null; if (r > 1) { state.features.push({ id: 'feature-' + (state.features.length + 1), kind: 'plazaDisc', circle: { cx: c.cx, cy: c.cy, r } }); sel = { type: 'feature', i: state.features.length - 1 }; } syncSel(); syncList(); draw(); }
+  });
+  stage.addEventListener('dblclick', () => { if (draft && draft.type === 'polygon') { draft.pts.pop(); closePolygon(); } });
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') { spaceDown = true; e.preventDefault(); }
+    if (e.key === 'Enter' && draft && draft.type === 'polygon') closePolygon();
+    if (e.key === 'Escape') { draft = null; sel = null; syncSel(); draw(); }
+    if (e.key === 'Delete' || e.key === 'Backspace') deleteSel();
+    if (e.key === 'o') { overlay.blink = !overlay.blink; draw(); }
+    const m = { v: 'select', h: 'pan', p: 'polygon', r: 'rect', c: 'circle', m: 'pin' }[e.key]; if (m) setMode(m);
+  });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+  function closePolygon() {
+    if (!draft || draft.pts.length < 3) { draft = null; draw(); return; }
+    const kind = $('#newKind').value, pts = draft.pts; draft = null;
+    if (kind === 'boundary') { state.boundary = pts; sel = { type: 'boundary' }; }
+    else if (kind === 'volume') { state.volumes.push({ id: 'volume-' + (state.volumes.length + 1), kind: 'tower', name: 'New volume', floors: 1, heightM: 4, polygon: pts }); sel = { type: 'volume', i: state.volumes.length - 1 }; }
+    else { state.features.push({ id: 'feature-' + (state.features.length + 1), kind: 'polygon', polygon: pts }); sel = { type: 'feature', i: state.features.length - 1 }; }
+    syncSel(); syncList(); draw();
+  }
+  function deleteSel() { if (!sel) return; if (sel.type === 'boundary') state.boundary = []; else state[sel.type + 's'].splice(sel.i, 1); sel = null; syncSel(); syncList(); draw(); }
+  function setMode(m) { mode = m; document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); draft = null; stage.style.cursor = m === 'pan' ? 'grab' : 'crosshair'; draw(); }
+  document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  const round = v => Math.round(v);
+
+  // ---------- sidebar ----------
+  function syncList() {
+    const L = $('#list'); L.innerHTML = '';
+    const add = (t, s, cls) => { const d = document.createElement('div'); d.textContent = t; d.className = cls || ''; d.onclick = () => { sel = s; syncSel(); syncList(); draw(); }; L.appendChild(d); };
+    add(`boundary (${state.boundary.length} pts)`, { type: 'boundary' }, sel && sel.type === 'boundary' ? 'sel' : '');
+    state.volumes.forEach((v, i) => add(`vol  ${v.id} · ${v.kind} · ${v.floors}f`, { type: 'volume', i }, sel && sel.type === 'volume' && sel.i === i ? 'sel' : ''));
+    state.features.forEach((f, i) => add(`feat ${f.id} · ${f.kind}`, { type: 'feature', i }, sel && sel.type === 'feature' && sel.i === i ? 'sel' : ''));
+    state.hotspots.forEach((h, i) => add(`pin  ${h.n} ${h.name}`, { type: 'hotspot', i }, sel && sel.type === 'hotspot' && sel.i === i ? 'sel' : ''));
+    syncScale();
+  }
+  function syncSel() { const o = selObj(); $('#props').value = o ? JSON.stringify(o, null, 1) : ''; }
+  $('#btnApply').onclick = () => { if (!sel) return; try { const o = JSON.parse($('#props').value); if (sel.type === 'boundary') state.boundary = o; else state[sel.type + 's'][sel.i] = o; syncList(); draw(); } catch (e) { alert('Invalid JSON: ' + e.message); } };
+  $('#btnDelete').onclick = deleteSel;
+  function syncScale() {
+    const b = state.boundary; if (b.length < 3 || !state.scale || !state.scale.acres) { $('#scale').textContent = 'Need boundary + scale.acres'; return; }
+    let a = 0; for (let i = 0; i < b.length; i++) { const [x1, y1] = b[i], [x2, y2] = b[(i + 1) % b.length]; a += x1 * y2 - x2 * y1; } a = Math.abs(a) / 2;
+    const mpp = Math.sqrt(state.scale.acres * 4046.86 / a); state.scale.metresPerPx = +mpp.toFixed(4);
+    $('#scale').textContent = `boundary ${a.toFixed(0)} px² · ${state.scale.acres} acres → ${mpp.toFixed(4)} m/px`;
+  }
+  $('#btnExport').onclick = () => { syncScale(); const t = JSON.stringify(state, null, 2); $('#out').value = t; $('#dl').href = URL.createObjectURL(new Blob([t], { type: 'application/json' })); };
+  $('#btnCopy').onclick = () => { $('#btnExport').onclick(); navigator.clipboard.writeText($('#out').value); };
+  $('#btnFit').onclick = fit;
+
+  // ---------- loading ----------
+  function loadImage(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
+  async function loadUrls(imgUrl, jsonUrl) {
+    if (jsonUrl) { const r = await fetch(jsonUrl); state = Object.assign(emptyState(), await r.json()); if (!imgUrl && state.plan.image) imgUrl = new URL(state.plan.image, new URL(jsonUrl, location.href)).href; }
+    if (imgUrl) { img = await loadImage(imgUrl); state.plan.width = img.width; state.plan.height = img.height; }
+    sel = null; syncSel(); syncList(); fit();
+  }
+  $('#btnLoad').onclick = () => loadUrls($('#imgUrl').value.trim(), $('#jsonUrl').value.trim()).catch(e => alert('Load failed: ' + e.message));
+  $('#fileImg').onchange = async e => { const f = e.target.files[0]; if (f) { img = await loadImage(URL.createObjectURL(f)); state.plan.width = img.width; state.plan.height = img.height; fit(); } };
+  $('#fileJson').onchange = async e => { const f = e.target.files[0]; if (f) { state = Object.assign(emptyState(), JSON.parse(await f.text())); sel = null; syncSel(); syncList(); draw(); } };
+  async function setOverlay(o = {}) {
+    Object.assign(overlay, o); if (overlay.src) { img2 = await loadImage(overlay.src); overlay.loaded = true; } else { img2 = null; overlay.loaded = false; }
+    $('#img2Url').value = overlay.src; $('#img2Alpha').value = overlay.alpha; $('#img2Fit').value = overlay.fit;
+    $('#img2Info').textContent = overlay.loaded ? `${img2.width}×${img2.height} → ${overlay.fit}${overlay.dx || overlay.dy ? ` +(${overlay.dx},${overlay.dy})` : ''}` : 'no overlay'; draw();
+  }
+  $('#btnImg2').onclick = () => setOverlay({ src: $('#img2Url').value.trim(), fit: $('#img2Fit').value }).catch(e => alert('Overlay failed: ' + e.message));
+  $('#img2Alpha').oninput = e => { overlay.alpha = +e.target.value; draw(); };
+  $('#img2Fit').onchange = e => { overlay.fit = e.target.value; draw(); };
+  window.addEventListener('resize', resize);
+  resize();
+  const q = new URLSearchParams(location.search);
+  if (q.get('img')) $('#imgUrl').value = q.get('img');
+  if (q.get('json')) $('#jsonUrl').value = q.get('json');
+  if (q.get('img') || q.get('json')) loadUrls(q.get('img') || '', q.get('json') || '').catch(e => alert('Load failed: ' + e.message));
+  if (q.get('img2')) setOverlay({ src: q.get('img2'), alpha: +(q.get('img2alpha') || 0.5), fit: q.get('img2fit') || 'frame', dx: +(q.get('img2dx') || 0), dy: +(q.get('img2dy') || 0) }).catch(e => alert('Overlay failed: ' + e.message));
+
+  // ---------- overlay measurement: for every traced edge, where does the PLAN's edge profile reappear in the overlay? ----------
+  // Along each edge's normal, the plan and the overlay give a gradient-magnitude profile; normalised cross-correlation over shifts ±range finds the
+  // offset (plan px) at which they align. Sign-agnostic (a photo's brightness step vs a drawing's ink line), immune to neighbouring lines.
+  function measureOverlay({ band = 10, range = 12, step = 4, minNcc = 0.3 } = {}) {
+    if (!img2 || !overlay.loaded) throw new Error('no overlay loaded');
+    const W = state.plan.width, H = state.plan.height, r = overlayRect();
+    const lumaOf = (paint) => { const oc = document.createElement('canvas'); oc.width = W; oc.height = H; const g = oc.getContext('2d', { willReadFrequently: true }); g.fillStyle = '#000'; g.fillRect(0, 0, W, H); paint(g);
+      const d = g.getImageData(0, 0, W, H).data, L = new Float32Array(W * H); for (let i = 0; i < W * H; i++) L[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]; return L; };
+    const Lp = lumaOf(g => g.drawImage(img, 0, 0, W, H)), Lo = lumaOf(g => g.drawImage(img2, r.x, r.y, r.w, r.h));
+    const at = (L, x, y) => { const xi = Math.round(x), yi = Math.round(y); return xi < 0 || yi < 0 || xi >= W || yi >= H ? 0 : L[yi * W + xi]; };
+    const median = a => { const s = [...a].sort((p, q) => p - q); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : NaN; };
+    // gradient-magnitude profile along the normal, t ∈ [-(band+range) .. band+range]
+    const profile = (L, px, py, nx, ny) => { const ext = band + range, out = new Float32Array(2 * ext + 1); for (let t = -ext; t <= ext; t++) out[t + ext] = Math.abs(at(L, px + nx * (t + 1), py + ny * (t + 1)) - at(L, px + nx * (t - 1), py + ny * (t - 1))); return out; };
+    const align = (px, py, nx, ny) => {   // → { s, ncc } best shift of the overlay profile against the plan profile
+      const ext = band + range, gp = profile(Lp, px, py, nx, ny), go = profile(Lo, px, py, nx, ny);
+      let pp = 0; for (let t = -band; t <= band; t++) pp += gp[t + ext] ** 2; if (pp < 1e-6) return null;   // the plan has no edge here: nothing to align
+      let best = -2, bs = 0;
+      for (let sft = -range; sft <= range; sft++) { let dot = 0, oo = 0; for (let t = -band; t <= band; t++) { const o = go[t + sft + ext]; dot += gp[t + ext] * o; oo += o * o; } const ncc = oo < 1e-6 ? 0 : dot / Math.sqrt(pp * oo); if (ncc > best) { best = ncc; bs = sft; } }
+      return { s: bs, ncc: best };
+    };
+    const edges = [];
+    const finish = (kind, id, i, hits, abs = false) => { const ok = hits.filter(h => h && h.ncc >= minNcc).map(h => abs ? Math.abs(h.s) : h.s), m = median(ok);   // circles: unsigned (a shifted circle's radial offsets are ±d·cosθ and would cancel)
+      edges.push({ kind, id, i, n: hits.length, confident: ok.length, median: ok.length ? m : null, mad: ok.length ? median(ok.map(t => Math.abs(t - m))) : null, weak: ok.length < Math.max(3, hits.length * 0.3) }); };
+    const segment = (kind, id, i, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy); if (len < 8) return; const nx = -dy / len, ny = dx / len, hits = [];
+      for (let s = 3; s <= len - 3; s += step) { const u = s / len; hits.push(align(a[0] + dx * u, a[1] + dy * u, nx, ny)); } finish(kind, id, i, hits); };
+    const polygon = (kind, id, pts) => pts.forEach((p, i) => segment(kind, id, i, p, pts[(i + 1) % pts.length]));
+    const circle = (kind, id, cx, cy, rad) => { const hits = [], n = Math.max(12, Math.round(2 * Math.PI * rad / step)); for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, nx = Math.cos(a), ny = Math.sin(a); hits.push(align(cx + nx * rad, cy + ny * rad, nx, ny)); } finish(kind, id, 0, hits, true); };
+    if (state.boundary.length) polygon('boundary', 'boundary', state.boundary);
+    state.volumes.forEach(v => polygon('volume', v.id, v.polygon));
+    state.features.forEach(f => { if (f.rect) { const [x0, y0, x1, y1] = f.rect; polygon('court', f.id, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]); } else if (f.circle) circle('circle', f.id, f.circle.cx, f.circle.cy, f.circle.r); else if (f.polygon) polygon('feature', f.id, f.polygon); });
+    const off = e => e.weak ? Infinity : Math.abs(e.median);   // an edge the overlay does not reproduce at all counts as failed
+    const byKind = {}; for (const e of edges) { const k = byKind[e.kind] || (byKind[e.kind] = { n: 0, over6: 0, weak: 0, worst: 0 }); k.n++; if (e.weak) k.weak++; if (off(e) > 6) k.over6++; if (!e.weak) k.worst = Math.max(k.worst, Math.abs(e.median)); }
+    return { edges, count: edges.length, over6: edges.filter(e => off(e) > 6).length, weak: edges.filter(e => e.weak).length, worst: Math.max(0, ...edges.filter(e => !e.weak).map(e => Math.abs(e.median))), byKind, band, range, step, minNcc, rect: r };
+  }
+  window.__tracer = { get state() { return state; }, get view() { return view; }, fit, draw, setView(v) { Object.assign(view, v); draw(); }, setOverlay, get overlay() { return { ...overlay }; }, measureOverlay };
+})();
+</script>
+</body>
+</html>
